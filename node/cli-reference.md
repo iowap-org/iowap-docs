@@ -1,6 +1,6 @@
 # node-cli — Command Reference
 
-`node-cli` is the generic, capability-driven daemon & CLI for the AI-Relay-Service.
+`node-cli` is the generic, capability-driven daemon & CLI for IOWAP.
 It is fully **capability-agnostic**: all behaviour is driven by an external
 YAML profile (see [capabilities.md](capabilities.md)). The CLI manages a
 background daemon, performs one-shot operations against the relay, and manages

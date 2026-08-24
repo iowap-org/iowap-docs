@@ -1,4 +1,4 @@
-# Docker — AI-Relay-Service (Server)
+# Docker — IOWAP (Server)
 
 Run the relay server in a container with `docker compose`. This is the
 primary deployment path for NAS owners and anyone without a Python/systemd

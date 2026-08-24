@@ -187,7 +187,7 @@ handler contract.
 ### Foreground (test)
 
 ```bash
-cd ~/ai-relay-service && source .venv/bin/activate
+cd ~/iowap-server && source .venv/bin/activate
 python -m nodes.common.node_cli daemon foreground
 ```
 
@@ -207,7 +207,7 @@ Create `/etc/systemd/system/ai-relay-node.service`:
 
 ```ini
 [Unit]
-Description=AI Relay Node
+Description=IOWAP Node
 After=network-online.target
 
 [Service]

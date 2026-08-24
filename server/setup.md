@@ -1,6 +1,6 @@
-# AI Relay Service — Server Setup: From Zero to Relay
+# IOWAP — Server Setup: From Zero to Relay
 
-This guide explains how to install, configure, and run the AI Relay Service
+This guide explains how to install, configure, and run the IOWAP relay
 core on your host. Node setup is documented separately in
 [node/setup.md](../node/setup.md).
 
@@ -483,7 +483,7 @@ Create `/etc/systemd/system/ai-relay.service`:
 
 ```ini
 [Unit]
-Description=AI Relay Service
+Description=IOWAP Relay
 After=network.target
 
 [Service]

@@ -1,6 +1,6 @@
-# Relay — Concepts
+# IOWAP — Concepts
 
-This document is the central concept reference for the AI Relay Service. It
+This document is the central concept reference for IOWAP. It
 explains what the relay is, the architecture it follows, how capabilities and
 tokens work, and the self-care pattern that ties them together. All other
 documents link back here for the underlying mental model.
@@ -28,7 +28,7 @@ replaceable. All intelligence and all domain data live in the nodes.
 
 ```
                           ┌────────────────────────┐
-                          │   AI Relay Service     │
+                          │   IOWAP Relay          │
                           │   core — port 8788     │
                           │  Auth / Discovery /    │
                           │  Scheduler / Events    │
