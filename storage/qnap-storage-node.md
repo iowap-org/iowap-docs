@@ -1,7 +1,6 @@
 # Storage Node on QNAP Container Station
 
-The **Storage Node** (`ai-relay-storage`) is a NAS storage service for the
-AI-Relay service. It stores files, manages backups, and transfers folders as
+The **Storage Node** (`ai-relay-storage`) is a NAS storage service for IOWAP. It stores files, manages backups, and transfers folders as
 `.tar.gz` — ideal for a QNAP as central storage.
 
 This image is built for **x86_64 (Intel/AMD)** QNAP models.
