@@ -143,8 +143,8 @@ the `relay-data` volume (and `postgres-data`) intact — do not run
 
 ## Image & user
 
-- **Published image:** `ghcr.io/kesuek/ai-relay-server:latest` is public on the
-  GitHub Container Registry. You can `docker pull ghcr.io/kesuek/ai-relay-server:latest`
+- **Published image:** `ghcr.io/iowap-org/iowap-server:latest` is public on the
+  GitHub Container Registry. You can `docker pull ghcr.io/iowap-org/iowap-server:latest`
   and `docker run` it directly without a repo checkout or build — see
   [server/setup.md §1b](setup.md#1b-docker-image--run-a-pre-built-container).
 - `docker/server/Dockerfile.relay`: multi-stage; runtime is `python:3.11-slim` with

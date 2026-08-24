@@ -13,8 +13,8 @@ The full server installation, bootstrap, recovery, and systemd setup is in
 **[setup.md](setup.md)**. Quick reference:
 
 ```bash
-git clone https://github.com/Kesuek/ai-relay-service.git
-cd ai-relay-service
+git clone https://github.com/iowap-org/iowap-server.git
+cd iowap-server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 relay-server admin init-master     # save the adm_... secret

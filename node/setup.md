@@ -21,11 +21,17 @@ Nodes are **not** installed via `pip install -e .` for the server. Clone the
 repo and run the node modules directly:
 
 ```bash
-git clone https://github.com/Kesuek/ai-relay-service.git
-cd ai-relay-service
+git clone https://github.com/iowap-org/iowap-server.git
+cd iowap-server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"      # server deps reused (httpx, pyyaml, pydantic)
 ```
+
+> The repo ships documentation as a git submodule under `docs/`. The **server**
+> needs it (`git clone --recursive`) because it serves docs at `/relay/v2/docs/`.
+> For a **node** the submodule is optional — the CLI reads docs from the server,
+> not locally. If you already cloned with `--recursive`, the extra files are
+> harmless.
 
 > **Note on the `node-cli` command:** the `node-cli` console script was
 > removed from the server package and is **no longer installed**. Always
@@ -207,9 +213,9 @@ After=network-online.target
 [Service]
 Type=simple
 User=felix
-WorkingDirectory=/home/felix/ai-relay-service
+WorkingDirectory=/home/felix/iowap-server
 Environment=RELAY_BASE_URL=http://192.168.2.10:8788
-ExecStart=/home/felix/ai-relay-service/.venv/bin/python -m nodes.common.node_cli daemon foreground
+ExecStart=/home/felix/iowap-server/.venv/bin/python -m nodes.common.node_cli daemon foreground
 Restart=always
 RestartSec=10
 
@@ -328,8 +334,8 @@ apt update && apt -y install python3 python3-venv python3-pip git sudo curl jq
 adduser felix && usermod -aG sudo felix
 sudo -u felix bash
 cd ~
-git clone https://github.com/Kesuek/ai-relay-service.git
-cd ai-relay-service
+git clone https://github.com/iowap-org/iowap-server.git
+cd iowap-server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 # then continue with step 2 of this guide (register, approve, daemon)

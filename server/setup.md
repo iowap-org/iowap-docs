@@ -33,12 +33,18 @@ environment:
 ### 1a. Bare metal — install from source
 
 ```bash
-git clone https://github.com/Kesuek/ai-relay-service.git
-cd ai-relay-service
+git clone --recursive https://github.com/iowap-org/iowap-server.git
+cd iowap-server
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```
+
+> The `--recursive` flag is required — the `docs/` directory is a git submodule
+> pointing to [iowap-org/iowap-docs](https://github.com/iowap-org/iowap-docs).
+> The relay serves these docs at `/relay/v2/docs/` so the node CLI can read
+> them via `node-cli docs`. If you already cloned without `--recursive`, run
+> `git submodule update --init` in the repo root.
 
 The relay runs from the venv with `relay-server`. Continue at §2 (session
 secret) and §13 (systemd service) below.
@@ -59,7 +65,7 @@ docker run -d \
   -e RELAY_SESSION_SECRET="$(openssl rand -base64 32)" \
   -e RELAY_SESSION_COOKIE_SECURE=false \
   -v relay-data:/app/.relay \
-  ghcr.io/kesuek/ai-relay-server:latest
+  ghcr.io/iowap-org/iowap-server:latest
 ```
 
 Notes:
@@ -81,8 +87,8 @@ path for NAS owners and for reproducible multi-service setups (optional
 bundled Postgres). It builds the image locally from the `Dockerfile.relay`.
 
 ```bash
-git clone https://github.com/Kesuek/ai-relay-service.git
-cd ai-relay-service
+git clone https://github.com/iowap-org/iowap-server.git
+cd iowap-server
 
 # 1. Create your environment (generate a real seed!)
 cp docker/server/.env.example .env
@@ -483,8 +489,8 @@ After=network.target
 [Service]
 Type=simple
 User=felix
-WorkingDirectory=/home/felix/projects/ai-relay-service
-ExecStart=/home/felix/projects/ai-relay-service/.venv/bin/relay-server server --port 8788
+WorkingDirectory=/home/felix/projects/iowap-server
+ExecStart=/home/felix/projects/iowap-server/.venv/bin/relay-server server --port 8788
 Environment=RELAY_ENABLE_MDNS=true
 # REQUIRED: Set RELAY_SESSION_SECRET or create ~/.relay/config.yaml with
 # session_secret. Without it the server refuses to start.
@@ -538,7 +544,7 @@ The repo ships a systemd user unit for the SSN at
 Pull the latest code, reinstall, and restart:
 
 ```bash
-cd ai-relay-service
+cd iowap-server
 git pull
 source .venv/bin/activate
 pip install -e ".[dev]"

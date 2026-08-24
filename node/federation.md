@@ -3,8 +3,8 @@
 > **⚠️ Concept — not yet implemented.** This document describes the planned
 > Federation Node based on discussions (2026-08-01) and subsequent design
 > refinements (2026-08-03). No code exists yet.
-> See [IDEAS.md](../../.hermes/projects/ai-relay-service/IDEAS.md) for the
-> original idea and [TASKS.md](../../.hermes/projects/ai-relay-service/TASKS.md)
+> See [IDEAS.md](../../.hermes/projects/iowap-server/IDEAS.md) for the
+> original idea and [TASKS.md](../../.hermes/projects/iowap-server/TASKS.md)
 > for the current board state.
 
 ## What is a Federation Node?

@@ -190,7 +190,7 @@ capabilities:
     description: "Hosts HTML dashboard pages for other capabilities."
     auto_publish: true
     claimable: true
-    handler: /home/felix/projects/ai-relay-service/nodes/handlers/ssn-capability-pages.sh
+    handler: /home/felix/projects/iowap-server/nodes/handlers/ssn-capability-pages.sh
     max_parallel: 1
     timeout: 300
 

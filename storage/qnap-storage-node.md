@@ -22,13 +22,13 @@ The image is public on the GitHub Container Registry. The QNAP can pull it
 directly — no login required:
 
 ```bash
-docker pull ghcr.io/kesuek/ai-relay-storage:latest
+docker pull ghcr.io/iowap-org/iowap-storage:latest
 ```
 
 **Option B — from the release asset:**
 
 Download the release asset `ai-relay-storage-bundle.tar` from the
-[Releases page](https://github.com/Kesuek/ai-relay-service/releases) and load
+[Releases page](https://github.com/iowap-org/iowap-server/releases) and load
 it into Docker:
 
 ```bash
@@ -57,7 +57,7 @@ docker run -d \
   -e NODE_ENDPOINT=http://<qnap-ip>:8791 \
   -v /share/Container/ai-relay-storage:/storage \
   -v ai-relay-storage-state:/home/appuser/.relay \
-  ghcr.io/kesuek/ai-relay-storage:latest
+  ghcr.io/iowap-org/iowap-storage:latest
 ```
 
 **Option B — via Container Station (GUI):**
@@ -67,7 +67,7 @@ docker run -d \
 > volume the node loses its identity on every restart.
 
 1. Open **Container Station** → **Overview** → **Create** → **Image**.
-2. Select `ghcr.io/kesuek/ai-relay-storage:latest` (or `ai-relay-storage:latest` after `docker load`).
+2. Select `ghcr.io/iowap-org/iowap-storage:latest` (or `ai-relay-storage:latest` after `docker load`).
 3. Set the environment variables (see table below).
 4. Mount `/storage` to a NAS folder (e.g. `/share/Container/ai-relay-storage`).
 5. Create a volume for `/home/appuser/.relay` (persists the node identity).
