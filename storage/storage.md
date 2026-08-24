@@ -98,8 +98,8 @@ See [`docker/README.md`](../../docker/README.md) for the build + compose
 walkthrough. The short version:
 
 ```
-docker build -t ai-relay-node-base -f docker/nodes/base/Dockerfile .
-docker build -t ai-relay-storage  -f docker/nodes/storage/Dockerfile .
+docker build -t iowap-node-base -f docker/nodes/base/Dockerfile .
+docker build -t iowap-storage  -f docker/nodes/storage/Dockerfile .
 RELAY_URL=https://relay.example.com STORAGE_DIR=/mnt/nas \
     docker compose -f docker/nodes/storage/docker-compose.yml up -d
 ```

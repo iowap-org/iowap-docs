@@ -1,6 +1,6 @@
 # Storage Node on QNAP Container Station
 
-The **Storage Node** (`ai-relay-storage`) is a NAS storage service for IOWAP. It stores files, manages backups, and transfers folders as
+The **Storage Node** (`iowap-storage`) is a NAS storage service for IOWAP. It stores files, manages backups, and transfers folders as
 `.tar.gz` — ideal for a QNAP as central storage.
 
 This image is built for **x86_64 (Intel/AMD)** QNAP models.
@@ -26,49 +26,49 @@ docker pull ghcr.io/iowap-org/iowap-storage:latest
 
 **Option B — from the release asset:**
 
-Download the release asset `ai-relay-storage-bundle.tar` from the
+Download the release asset `iowap-storage-bundle.tar` from the
 [Releases page](https://github.com/iowap-org/iowap-server/releases) and load
 it into Docker:
 
 ```bash
 # On the QNAP (via SSH) or in Container Station:
-docker load -i ai-relay-storage-bundle.tar
+docker load -i iowap-storage-bundle.tar
 ```
 
-The bundle contains both images: `ai-relay-storage:latest` and
-`ai-relay-node-base:latest`.
+The bundle contains both images: `iowap-storage:latest` and
+`iowap-node-base:latest`.
 
 ### 2. Start the storage node
 
 **Option A — via `docker run` (SSH):**
 
-> **⚠️ Important:** Always pass `-v ai-relay-storage-state:/home/appuser/.relay`.
+> **⚠️ Important:** Always pass `-v iowap-storage-state:/home/appuser/.relay`.
 > Container Station does **not** create a volume automatically — without this
 > volume the node loses its identity (node_id + token) on every restart and
 > re-registers itself.
 
 ```bash
 docker run -d \
-  --name ai-relay-storage \
+  --name iowap-storage \
   --restart unless-stopped \
   -e RELAY_URL=http://<relay-ip>:8788 \
   -e NODE_NAME=storage-node \
   -e NODE_ENDPOINT=http://<qnap-ip>:8791 \
-  -v /share/Container/ai-relay-storage:/storage \
-  -v ai-relay-storage-state:/home/appuser/.relay \
+  -v /share/Container/iowap-storage:/storage \
+  -v iowap-storage-state:/home/appuser/.relay \
   ghcr.io/iowap-org/iowap-storage:latest
 ```
 
 **Option B — via Container Station (GUI):**
 
 > **⚠️ Important:** In the Container Station dialog, create a **volume** that
-> points to `/home/appuser/.relay` (e.g. `ai-relay-storage-state`). Without this
+> points to `/home/appuser/.relay` (e.g. `iowap-storage-state`). Without this
 > volume the node loses its identity on every restart.
 
 1. Open **Container Station** → **Overview** → **Create** → **Image**.
-2. Select `ghcr.io/iowap-org/iowap-storage:latest` (or `ai-relay-storage:latest` after `docker load`).
+2. Select `ghcr.io/iowap-org/iowap-storage:latest` (or `iowap-storage:latest` after `docker load`).
 3. Set the environment variables (see table below).
-4. Mount `/storage` to a NAS folder (e.g. `/share/Container/ai-relay-storage`).
+4. Mount `/storage` to a NAS folder (e.g. `/share/Container/iowap-storage`).
 5. Create a volume for `/home/appuser/.relay` (persists the node identity).
 6. Start the container.
 
@@ -97,7 +97,7 @@ curl -X POST http://<relay-ip>:8788/relay/v2/admin/nodes/<node_id>/approve \
 
 > **`RELAY_URL` is optional (T-152).** If you omit it, the node finds the relay
 > via mDNS on the local network (the relay advertises itself as
-> `ai-relay.local`). This works when relay + node are on the same LAN.
+> `iowap.local`). This works when relay + node are on the same LAN.
 >
 > The bridge allowlist (`storage.upload_channel`/`download_channel`) resolves
 > the relay IP from `RELAY_URL` — or from mDNS when `RELAY_URL` is unset — so
@@ -112,11 +112,11 @@ curl -X POST http://<relay-ip>:8788/relay/v2/admin/nodes/<node_id>/approve \
 | `/storage` | NAS export — the actual files/backups. Bind-mount to a QNAP folder. |
 | `/home/appuser/.relay` | Node meta + token (persists identity across restarts). Named volume. |
 
-> **⚠️ Important for updates:** The volume `ai-relay-storage-state` (→ `/home/appuser/.relay`)
+> **⚠️ Important for updates:** The volume `iowap-storage-state` (→ `/home/appuser/.relay`)
 > must stay **mounted** on restart. If you delete and recreate the container
-> without mounting the volume, the node loses its `ai-relay-agent.json`
+> without mounting the volume, the node loses its `iowap-agent.json`
 > (node_id + token) and re-registers — it gets a new node ID and must be
-> approved again. Always pass `-v ai-relay-storage-state:/home/appuser/.relay`
+> approved again. Always pass `-v iowap-storage-state:/home/appuser/.relay`
 > on `docker run`.
 
 ## Capabilities

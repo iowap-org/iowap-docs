@@ -7,8 +7,8 @@ core on your host. Node setup is documented separately in
 ## What you get
 
 - A central relay server that routes tasks between nodes
-- A web dashboard at `http://ai-relay.local:8788/relay/v2/dashboard/`
-- Optional mDNS advertisement so nodes can find the relay as `ai-relay.local`
+- A web dashboard at `http://iowap.local:8788/relay/v2/dashboard/`
+- Optional mDNS advertisement so nodes can find the relay as `iowap.local`
 
 For the architecture and concepts behind the relay see
 [../concepts.md](../concepts.md).
@@ -58,7 +58,7 @@ checkout or build is needed:
 # Run the relay on SQLite. `relay-data` volume persists DB + artifacts.
 docker volume create relay-data
 docker run -d \
-  --name ai-relay-server \
+  --name iowap-server \
   --restart unless-stopped \
   -p 8788:8788 \
   -e RELAY_MASTER_SEED="$(python -c 'import secrets; print("adm_" + secrets.token_urlsafe(32))')" \
@@ -158,7 +158,7 @@ RELAY_ENABLE_MDNS=true relay-server server --port 8788
 
 The relay is now reachable as:
 
-- `http://ai-relay.local:8788` (mDNS)
+- `http://iowap.local:8788` (mDNS)
 - `http://<relay-ip>:8788` (direct IP)
 
 ### With static IP only
@@ -172,7 +172,7 @@ relay-server server --port 8788
 When the server starts for the first time, no human admin exists. The dashboard
 login form therefore shows the **Master seed** option.
 
-1. Open `http://ai-relay.local:8788/relay/v2/dashboard/`
+1. Open `http://iowap.local:8788/relay/v2/dashboard/`
 2. Choose **Master seed** and paste the seed from step 3
 3. You are redirected to the bootstrap page
 4. Enter a username (and optional email) for the first admin
@@ -212,7 +212,7 @@ API — see [admin.md](admin.md) and [dashboard.md](dashboard.md).
 ## 8. Verify the setup
 
 ```bash
-curl http://ai-relay.local:8788/health
+curl http://iowap.local:8788/health
 ```
 
 ## 9. HTTPS / TLS
@@ -227,8 +227,8 @@ Set `tls_certfile` and `tls_keyfile` in `~/.relay/config.yaml`:
 
 ```yaml
 # ~/.relay/config.yaml
-tls_certfile: /etc/certs/ai-relay/fullchain.pem
-tls_keyfile:  /etc/certs/ai-relay/privkey.pem
+tls_certfile: /etc/certs/iowap/fullchain.pem
+tls_keyfile:  /etc/certs/iowap/privkey.pem
 ```
 
 When set, the relay serves **HTTPS** on its port and automatically suppresses
@@ -253,7 +253,7 @@ Internet / LAN  ──HTTPS──▶  Reverse proxy (TLS)  ──HTTP──▶  
 
 ```caddyfile
 # /etc/caddy/Caddyfile
-ai-relay.example.com {
+iowap.example.com {
     reverse_proxy 127.0.0.1:8788
 }
 ```
@@ -264,13 +264,13 @@ Caddy obtains and renews the certificate automatically. Reload with
 #### nginx
 
 ```nginx
-# /etc/nginx/sites-available/ai-relay
+# /etc/nginx/sites-available/iowap
 server {
     listen 443 ssl http2;
-    server_name ai-relay.example.com;
+    server_name iowap.example.com;
 
-    ssl_certificate     /etc/letsencrypt/live/ai-relay.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ai-relay.example.com/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/iowap.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/iowap.example.com/privkey.pem;
 
     client_max_body_size 110m;   # > max_upload_bytes (100 MiB) + multipart overhead
 
@@ -287,7 +287,7 @@ server {
 }
 ```
 
-Obtain the cert with `certbot --nginx -d ai-relay.example.com`.
+Obtain the cert with `certbot --nginx -d iowap.example.com`.
 
 #### Traefik
 
@@ -300,12 +300,12 @@ certificatesResolvers:
   le: { acme: { email: you@example.com, storage: /etc/traefik/acme.json, httpChallenge: { entryPoint: web } } }
 http:
   routers:
-    ai-relay:
-      rule: "Host(`ai-relay.example.com`)"
-      service: ai-relay
+    iowap:
+      rule: "Host(`iowap.example.com`)"
+      service: iowap
       tls: { certResolver: le }
   services:
-    ai-relay:
+    iowap:
       loadBalancer: { servers: [ { url: "http://127.0.0.1:8788" } ] }
 ```
 
@@ -352,9 +352,9 @@ The database is a single file. Back it up with either:
 
 ```bash
 # Cold copy (stop the relay first for a fully consistent snapshot)
-systemctl stop ai-relay.service
+systemctl stop iowap.service
 cp ~/.relay/server.db ~/.relay/backup/server-$(date +%F).db
-systemctl start ai-relay.service
+systemctl start iowap.service
 
 # Hot backup (online, transaction-consistent)
 sqlite3 ~/.relay/server.db ".backup ~/.relay/backup/server-$(date +%F).db"
@@ -385,12 +385,12 @@ host: "0.0.0.0"
 port: 8788
 log_level: "info"            # debug | info | warning | error
 enable_mdns: true
-mdns_hostname: "ai-relay"
+mdns_hostname: "iowap"
 
 # TLS (T-111) — set cert+key to serve HTTPS (Internet mode). Leave unset for
 # plain HTTP over Tailscale/WireGuard (Homelab mode).
-# tls_certfile: "/etc/certs/ai-relay/fullchain.pem"
-# tls_keyfile:  "/etc/certs/ai-relay/privkey.pem"
+# tls_certfile: "/etc/certs/iowap/fullchain.pem"
+# tls_keyfile:  "/etc/certs/iowap/privkey.pem"
 
 # Paths
 db_path: "~/.relay/server.db"
@@ -423,7 +423,7 @@ max_retries: 2
 # SSN (Server-Side Node) — T-069
 ssn_enabled: false               # set true to start/stop the SSN unit with the server
 ssn_auto_approve: true           # auto-approve the SSN's pending registration
-ssn_service_unit: "ai-relay-ssn.service"
+ssn_service_unit: "iowap-ssn.service"
 ```
 
 The same keys can be set as `RELAY_PORT`, `RELAY_ENABLE_MDNS`,
@@ -438,7 +438,7 @@ The `session_secret` signs dashboard session cookies. To rotate it:
 1. Generate a new secret: `openssl rand -base64 32`.
 2. Put it in `~/.relay/config.yaml` (`session_secret:`) or
    `RELAY_SESSION_SECRET`.
-3. Restart the relay: `systemctl restart ai-relay.service`.
+3. Restart the relay: `systemctl restart iowap.service`.
 
 **All existing dashboard sessions become invalid immediately** — every admin
 has to log in again. Rotate only on suspicion of compromise, or during a
@@ -479,7 +479,7 @@ pointing at the same `server.db`.
 
 ## 13. Systemd service for the relay
 
-Create `/etc/systemd/system/ai-relay.service`:
+Create `/etc/systemd/system/iowap.service`:
 
 ```ini
 [Unit]
@@ -506,19 +506,19 @@ Then:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable ai-relay.service
-sudo systemctl start ai-relay.service
+sudo systemctl enable iowap.service
+sudo systemctl start iowap.service
 ```
 
 ### Server-Side Node (SSN)
 
 The repo ships a systemd user unit for the SSN at
-`systemd/ai-relay-ssn.service`. To enable the SSN:
+`systemd/iowap-ssn.service`. To enable the SSN:
 
 1. Install the unit into your user systemd directory:
 
    ```bash
-   cp systemd/ai-relay-ssn.service ~/.config/systemd/user/
+   cp systemd/iowap-ssn.service ~/.config/systemd/user/
    systemctl --user daemon-reload
    ```
 
@@ -527,7 +527,7 @@ The repo ships a systemd user unit for the SSN at
    ```yaml
    ssn_enabled: true
    ssn_auto_approve: true
-   ssn_service_unit: "ai-relay-ssn.service"
+   ssn_service_unit: "iowap-ssn.service"
    ```
 
 3. The relay server starts/stops the SSN unit in its `lifespan()` hook.
@@ -548,14 +548,14 @@ cd iowap-server
 git pull
 source .venv/bin/activate
 pip install -e ".[dev]"
-sudo systemctl restart ai-relay.service
+sudo systemctl restart iowap.service
 ```
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| `ai-relay.local` not found | Use the relay's IP address directly, or check that mDNS reflector is enabled on your router / Avahi is running on the relay host. |
+| `iowap.local` not found | Use the relay's IP address directly, or check that mDNS reflector is enabled on your router / Avahi is running on the relay host. |
 | mDNS blocks startup | Update to the latest relay-server version; mDNS now starts asynchronously. |
 | Port 8788 already in use | `ss -lntp \| grep 8788` to find the process, stop it, then restart. |
 | Node stays `pending` | Approve it in the dashboard or via admin API (see [admin.md](admin.md)). |

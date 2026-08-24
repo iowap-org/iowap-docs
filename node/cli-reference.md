@@ -14,8 +14,8 @@ python -m nodes.common.node_cli <command> [options]
 node-cli <command> [options]
 ```
 
-The CLI requires a registered node — `~/.relay/ai-relay-agent.json` and
-`~/.relay/ai-relay-agent.token` must exist (see
+The CLI requires a registered node — `~/.relay/iowap-agent.json` and
+`~/.relay/iowap-agent.token` must exist (see
 [setup.md](setup.md) for registration).
 
 There is also an SSE-driven alternative: see [node-daemon.md](node-daemon.md).
@@ -119,7 +119,7 @@ eine dreistufige Selbstheilung im geteilten `RelayClient` (greift für
    liest der Daemon die Token-Datei neu ein. So heilt sich der Daemon
    selbst, sobald ein externer Prozess (oder ein manueller Eingriff) die
    Datei korrigiert hat — `node-cli node register` oder ein händisches
-   Überschreiben von `~/.relay/ai-relay-agent.token`.
+   Überschreiben von `~/.relay/iowap-agent.token`.
 
 2. **Exponentieller Backoff.** Ab drei aufeinanderfolgenden
    Auth-Fehlschlägen erhöht der Daemon den Heartbeat-/Claim-Abstand
@@ -667,7 +667,7 @@ node-cli node info 3H69CMAD
 
 Mark this node as `busy`. The scheduler will stop sending new stage claims
 to it until the status changes. The request is persisted in
-`~/.relay/ai-relay-agent.json` and forwarded on the next heartbeat; the
+`~/.relay/iowap-agent.json` and forwarded on the next heartbeat; the
 server validates the transition (online/idle → busy) via the central
 status registry and silently ignores invalid ones.
 
@@ -705,7 +705,7 @@ node-cli node clear-status --once
 
 #### `status` (T-084)
 
-Show the local requested status (from `ai-relay-agent.json`, if any) and
+Show the local requested status (from `iowap-agent.json`, if any) and
 query the server for the authoritative current status of this node,
 including load and queue depth.
 
@@ -908,7 +908,7 @@ node-cli docs
 node-cli docs node-cli-reference
 # -> Node Setup
 # ->
-# -> Install the runtime token at ~/.relay/ai-relay-agent.token.
+# -> Install the runtime token at ~/.relay/iowap-agent.token.
 # -> ...
 ```
 
@@ -1173,8 +1173,8 @@ All paths are relative to `~/.relay/` unless noted.
 
 | Path | Description |
 |---|---|
-| `ai-relay-agent.json` | Node metadata (node_id, node_name, capabilities, registration_secret, base_url) |
-| `ai-relay-agent.token` | Runtime token (`rt_`...) |
+| `iowap-agent.json` | Node metadata (node_id, node_name, capabilities, registration_secret, base_url) |
+| `iowap-agent.token` | Runtime token (`rt_`...) |
 | `worker_status.json` | Daemon status file (written after every heartbeat) |
 | `node.yaml` | Active node config — see [node-config.md](node-config.md) |
 | `node.profile` | Name of the active profile |
@@ -1212,7 +1212,7 @@ All paths are relative to `~/.relay/` unless noted.
 | `RELAY_PROFILES_DIR` | capabilities | Override the `profiles.d/` directory |
 
 > **Token is read from a file, not an env var.** The CLI loads the runtime
-> token from `~/.relay/ai-relay-agent.token` only. A `RELAY_RUNTIME_TOKEN`
+> token from `~/.relay/iowap-agent.token` only. A `RELAY_RUNTIME_TOKEN`
 > env-var fallback is shown by the dashboard UI but is **not yet honoured**
 > by the CLI — keep the token in the file (with `chmod 600`; see
 > [setup.md §Token storage & permissions](setup.md)).
@@ -1262,14 +1262,14 @@ underscores, uppercased).
   (`{"token": "...", "expires_at": "..."}`) written by `save_token()`; a
   missing or malformed `expires_at` is ignored and the existing 401/403 retry
   path still applies.
-- **Missing token:** if `~/.relay/ai-relay-agent.token` is absent, the CLI
+- **Missing token:** if `~/.relay/iowap-agent.token` is absent, the CLI
   attempts registration-secret recovery immediately on startup.
 - **Network errors** (`httpx.HTTPError`) are reported on stderr and exit `1`.
 - **`KeyboardInterrupt`** exits `130`.
 - **Invalid CLI arguments** exit `2` (argparse default).
 
 > **Token file format (T-088):** since T-088 the token file at
-> `~/.relay/ai-relay-agent.token` is a JSON envelope
+> `~/.relay/iowap-agent.token` is a JSON envelope
 > `{"token": "rt_...", "expires_at": "2026-08-08T08:30:00+00:00"}`. Legacy
 > plaintext token files (pre-T-088) are still read on load with
 > `expires_at: null` and migrated to the JSON format on the next refresh.

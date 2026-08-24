@@ -181,7 +181,7 @@ recognised:
 | Key | Description |
 |-----|-------------|
 | `status` | Operator-requested node status (`busy` / `idle` / `online`). Written by `node-cli node busy` / `idle` / `clear-status`; the next heartbeat forwards it to the server. |
-| `node_name` | Optional node-name override (forwarded in the heartbeat; also read from `ai-relay-agent.json`). |
+| `node_name` | Optional node-name override (forwarded in the heartbeat; also read from `iowap-agent.json`). |
 | `description` | Optional free-form node description (forwarded in the heartbeat). |
 | `capabilities` | Optional list of capability entries (see above). |
 
@@ -457,7 +457,7 @@ For the full `node-cli` command reference see [node-cli-reference.md](node-cli-r
 
 Beyond per-capability metadata, a node can advertise **node-level** fields
 that describe the node as a whole. These are top-level keys in the
-node's meta file (`ai-relay-agent.json`):
+node's meta file (`iowap-agent.json`):
 
 ```json
 {

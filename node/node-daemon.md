@@ -12,7 +12,7 @@ pip install -e .
 node-daemon --foreground
 
 # Run as systemd service
-systemctl --user enable --now ai-relay-node-daemon.service
+systemctl --user enable --now iowap-node-daemon.service
 ```
 
 ## CLI Options
@@ -115,7 +115,7 @@ sofort zurückgesetzt.
 
 ## systemd Service
 
-The service file is at `systemd/ai-relay-node-daemon.service`. It expects:
+The service file is at `systemd/iowap-node-daemon.service`. It expects:
 
 - `RELAY_BASE_URL` — the relay server URL (default: `http://127.0.0.1:8788`)
 - `RELAY_LOG_LEVEL` — log level (default: `INFO`)
@@ -123,26 +123,26 @@ The service file is at `systemd/ai-relay-node-daemon.service`. It expects:
 Install it:
 
 ```bash
-cp systemd/ai-relay-node-daemon.service ~/.config/systemd/user/
+cp systemd/iowap-node-daemon.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now ai-relay-node-daemon.service
+systemctl --user enable --now iowap-node-daemon.service
 ```
 
 ## Logs
 
 ```bash
-journalctl --user -u ai-relay-node-daemon.service -f
+journalctl --user -u iowap-node-daemon.service -f
 ```
 
 ## Switching from `node-cli daemon`
 
 ```bash
 # Stop the polling daemon
-systemctl --user stop ai-relay-node-cli.service
-systemctl --user disable ai-relay-node-cli.service
+systemctl --user stop iowap-node-cli.service
+systemctl --user disable iowap-node-cli.service
 
 # Start the SSE daemon
-systemctl --user enable --now ai-relay-node-daemon.service
+systemctl --user enable --now iowap-node-daemon.service
 ```
 
 Both daemons use the same config, token, and capabilities. Only the claim mechanism differs.

@@ -155,7 +155,7 @@ If a node lost its token or the token expired, issue a new one:
 1. Open **Nodes**
 2. Find the approved node
 3. Click **New token**
-4. Copy the token and save it to the node's `~/.relay/ai-relay-agent.token`
+4. Copy the token and save it to the node's `~/.relay/iowap-agent.token`
    file
 
 Issuing a new token invalidates the previous runtime token for that node.
@@ -231,7 +231,7 @@ instead (no auth, Prometheus text format). See
 - Runtime tokens expire after 7 days by default
 - If a token is leaked, issue a new one for the node
 - Service nodes should store tokens in files with restricted permissions
-  (`chmod 600 ~/.relay/ai-relay-agent.token`)
+  (`chmod 600 ~/.relay/iowap-agent.token`)
 
 ## 6. Troubleshooting
 

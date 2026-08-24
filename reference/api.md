@@ -160,7 +160,7 @@ Serves selected Markdown documents as HTML. The whitelist is defined in
 ## Worked examples (cURL)
 
 The examples below use the shell variable `RELAY_HOST` (e.g.
-`export RELAY_HOST=ai-relay.local`) and assume the default port `8788`. JSON
+`export RELAY_HOST=iowap.local`) and assume the default port `8788`. JSON
 output is piped through `jq` for readability; install it or drop the pipe.
 Replace the placeholder tokens (`rt_…`, `rs_…`, `adm_…`) with your own.
 

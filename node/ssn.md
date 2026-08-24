@@ -166,17 +166,17 @@ html = f'<img src="data:image/png;base64,{img_b64}" alt="Image">'
 The SSN daemon runs as a systemd user unit:
 
 ```bash
-cp systemd/ai-relay-ssn.service ~/.config/systemd/user/
+cp systemd/iowap-ssn.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now ai-relay-ssn.service
+systemctl --user enable --now iowap-ssn.service
 ```
 
 ### 2. SSN Proxy
 
 ```bash
-cp systemd/ai-relay-ssn-proxy.service ~/.config/systemd/user/
+cp systemd/iowap-ssn-proxy.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now ai-relay-ssn-proxy.service
+systemctl --user enable --now iowap-ssn-proxy.service
 ```
 
 ### 3. Capability profile

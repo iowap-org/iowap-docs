@@ -83,7 +83,7 @@ Save the new token immediately — the old one is invalidated.
 > runtime token proactively in its heartbeat loop when it expires in
 > less than 1 hour, so manual refresh is only needed for long-running
 > one-shot commands or nodes that do not run the daemon. The token file
-> (`~/.relay/ai-relay-agent.token`) is stored as a JSON envelope with
+> (`~/.relay/iowap-agent.token`) is stored as a JSON envelope with
 > the token's `expires_at` so the daemon knows when to refresh.
 
 ## Refresh the registration secret
@@ -113,9 +113,9 @@ curl -X POST "http://${RELAY_HOST}:8788/relay/v2/auth/refresh" \
 
 ```python
 data = r.json()
-save_token(data["token"])                              # ai-relay-agent.token
+save_token(data["token"])                              # iowap-agent.token
 state["registration_secret"] = data["registration_secret"]
-STATE_FILE.write_text(json.dumps(state, indent=2))     # ai-relay-agent.json
+STATE_FILE.write_text(json.dumps(state, indent=2))     # iowap-agent.json
 ```
 
 > Only `/relay/v2/auth/refresh` creates or rotates credentials. `/auth/status`
@@ -124,7 +124,7 @@ STATE_FILE.write_text(json.dumps(state, indent=2))     # ai-relay-agent.json
 
 ## State file schema
 
-`~/.relay/ai-relay-agent.json`:
+`~/.relay/iowap-agent.json`:
 
 ```json
 {
@@ -137,7 +137,7 @@ STATE_FILE.write_text(json.dumps(state, indent=2))     # ai-relay-agent.json
 }
 ```
 
-The runtime token lives separately in `~/.relay/ai-relay-agent.token` so it can
+The runtime token lives separately in `~/.relay/iowap-agent.token` so it can
 be rotated without rewriting the state file.
 
 ## Common mistakes

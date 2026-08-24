@@ -83,7 +83,7 @@ Start relay + postgres together:
 docker compose -f docker/server/docker-compose.yml --profile postgres up -d --build
 ```
 
-The `postgres` service is a container named `ai-relay-postgres`; the relay
+The `postgres` service is a container named `iowap-postgres`; the relay
 reaches it at hostname `postgres` on the compose network. Its data lives in
 the `postgres-data` volume.
 

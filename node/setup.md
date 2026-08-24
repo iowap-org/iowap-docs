@@ -11,7 +11,7 @@ behind nodes, capabilities, and tokens see [../concepts.md](../concepts.md) and
 
 ## Prerequisites
 
-- The relay URL (e.g. `http://192.168.2.10:8788` or `http://ai-relay.local:8788`)
+- The relay URL (e.g. `http://192.168.2.10:8788` or `http://iowap.local:8788`)
 - Python 3.11+
 - Network access to the relay
 
@@ -81,14 +81,14 @@ Save the response — it contains your `node_id`, a temporary token (`tp_…`,
 
 ## 3. Persist the state file
 
-Persist the response in `~/.relay/ai-relay-agent.json`. The runtime token lives
-separately in `~/.relay/ai-relay-agent.token` so it can be rotated without
+Persist the response in `~/.relay/iowap-agent.json`. The runtime token lives
+separately in `~/.relay/iowap-agent.token` so it can be rotated without
 rewriting the state file.
 
 ```bash
 mkdir -p ~/.relay
 jq '{node_id, node_name, registration_secret, capabilities, base_url: "http://'${RELAY_HOST}':8788"}' \
-  /tmp/register.json > ~/.relay/ai-relay-agent.json
+  /tmp/register.json > ~/.relay/iowap-agent.json
 ```
 
 State file schema:
@@ -131,9 +131,9 @@ recovers it with the registration secret:
 ```bash
 curl -X POST "http://${RELAY_HOST}:8788/relay/v2/auth/refresh" \
   -H "Content-Type: application/json" \
-  -d "$(jq -c '{node_id, registration_secret, requested_credential: \"runtime_token\"}' ~/.relay/ai-relay-agent.json)" \
+  -d "$(jq -c '{node_id, registration_secret, requested_credential: \"runtime_token\"}' ~/.relay/iowap-agent.json)" \
   | tee /tmp/refresh.json
-jq -r .token /tmp/refresh.json > ~/.relay/ai-relay-agent.token
+jq -r .token /tmp/refresh.json > ~/.relay/iowap-agent.token
 # persist the rotated registration secret too
 jq -r .registration_secret /tmp/refresh.json
 ```
@@ -145,7 +145,7 @@ jq -r .registration_secret /tmp/refresh.json
 > instead:
 > ```bash
 > jq -c '{token: .token, expires_at: .expires_at}' /tmp/refresh.json \
->   > ~/.relay/ai-relay-agent.token
+>   > ~/.relay/iowap-agent.token
 > ```
 
 See [token-lifecycle.md](token-lifecycle.md) for the full refresh and recovery
@@ -203,7 +203,7 @@ claims stages for every `claimable` capability in the active profile.
 
 ### systemd service
 
-Create `/etc/systemd/system/ai-relay-node.service`:
+Create `/etc/systemd/system/iowap-node.service`:
 
 ```ini
 [Unit]
@@ -225,8 +225,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now ai-relay-node.service
-systemctl status ai-relay-node.service
+sudo systemctl enable --now iowap-node.service
+systemctl status iowap-node.service
 ```
 
 ## 8. Verify
@@ -247,9 +247,9 @@ python -m nodes.common.node_cli status
 - [ ] Know the relay URL
 - [ ] Install the node code
 - [ ] Register via `/relay/v2/auth/register`
-- [ ] Save `node_id` and `registration_secret` to `~/.relay/ai-relay-agent.json`
+- [ ] Save `node_id` and `registration_secret` to `~/.relay/iowap-agent.json`
 - [ ] Wait until the admin activates the node (poll `/auth/status`)
-- [ ] Obtain the runtime token → `~/.relay/ai-relay-agent.token`
+- [ ] Obtain the runtime token → `~/.relay/iowap-agent.token`
 - [ ] Define and publish a capability profile
 - [ ] Start the daemon (foreground first, then systemd)
 - [ ] Refresh tokens before expiry; recover with the registration secret if lost
@@ -257,16 +257,16 @@ python -m nodes.common.node_cli status
 
 ## Token storage & permissions
 
-The runtime token (`~/.relay/ai-relay-agent.token`) and state file
-(`~/.relay/ai-relay-agent.json`) are credentials — anyone who can read them
+The runtime token (`~/.relay/iowap-agent.token`) and state file
+(`~/.relay/iowap-agent.json`) are credentials — anyone who can read them
 can impersonate the node. The daemon **does not** set restrictive
 permissions automatically. Secure them yourself:
 
 ```bash
-chmod 600 ~/.relay/ai-relay-agent.token ~/.relay/ai-relay-agent.json
+chmod 600 ~/.relay/iowap-agent.token ~/.relay/iowap-agent.json
 chmod 700 ~/.relay
-ls -l ~/.relay/ai-relay-agent.token
-# -rw------- ... ai-relay-agent.token
+ls -l ~/.relay/iowap-agent.token
+# -rw------- ... iowap-agent.token
 ```
 
 For a systemd service, enforce it in the unit:
@@ -276,24 +276,24 @@ For a systemd service, enforce it in the unit:
 ...
 UMask=0077
 # Or, if you manage the files out-of-band:
-ExecStartPre=/bin/chmod 600 %h/.relay/ai-relay-agent.token %h/.relay/ai-relay-agent.json
+ExecStartPre=/bin/chmod 600 %h/.relay/iowap-agent.token %h/.relay/iowap-agent.json
 ```
 
 Alternatives for containers / hosts where you do not want files on disk:
 
 - **Bind-mount** a read-only token file from the host secret store into the
-  container at `~/.relay/ai-relay-agent.token` (and the state file at
-  `~/.relay/ai-relay-agent.json`).
+  container at `~/.relay/iowap-agent.token` (and the state file at
+  `~/.relay/iowap-agent.json`).
 - **Provision the files** at startup from a secret manager
-  (e.g. `vault kv get -field=token … > ~/.relay/ai-relay-agent.token &&
-  chmod 600 ~/.relay/ai-relay-agent.token`) in an `ExecStartPre=` or
+  (e.g. `vault kv get -field=token … > ~/.relay/iowap-agent.token &&
+  chmod 600 ~/.relay/iowap-agent.token`) in an `ExecStartPre=` or
   container entrypoint.
 
-Never commit `~/.relay/ai-relay-agent.token` or `ai-relay-agent.json` to git
+Never commit `~/.relay/iowap-agent.token` or `iowap-agent.json` to git
 or include them in image layers.
 
 > The node CLI currently reads the token **only** from
-> `~/.relay/ai-relay-agent.token`; an env-var fallback
+> `~/.relay/iowap-agent.token`; an env-var fallback
 > (`RELAY_RUNTIME_TOKEN`) is referenced by the dashboard UI but not yet
 > honoured by the CLI. Until it is, keep the token in the file.
 
@@ -305,12 +305,12 @@ or include them in image layers.
 | `403` on claim | Capability not in the latest heartbeat → check `~/.relay/node.yaml` and that `auto_publish: true`. |
 | `404` on `/auth/refresh` | Wrong `RELAY_BASE_URL`, or the node was deleted by an admin → re-register. |
 | Node stays `pending` | Admin has not approved it yet (dashboard → Nodes → Approve). |
-| Node `offline` in dashboard | Daemon not running, or heartbeat interval too long. `systemctl status ai-relay-node.service` and `tail ~/.relay/node-cli.log`. |
+| Node `offline` in dashboard | Daemon not running, or heartbeat interval too long. `systemctl status iowap-node.service` and `tail ~/.relay/node-cli.log`. |
 | Both credentials expired | Re-register the node (step 2). |
 | `ConnectionError` / `Network is unreachable` | Check `RELAY_BASE_URL`, reachability (`curl http://<relay>:8788/health`), and firewall on both ends. |
 | `python: command not found` / wrong version | Use `python3` explicitly; require 3.11+ (`python3 --version`). Install via `pyenv` or your distro's `python3.11` package. |
 | `Permission denied: ~/.relay/...` | The user running the daemon must own `~/.relay/`. `chown -R $USER ~/.relay`, `chmod 700 ~/.relay`. |
-| Daemon exits immediately under systemd | Use absolute paths in `ExecStart` (`.venv/bin/python`), set `WorkingDirectory`, and `User=` to the owner of `~/.relay`. Check `journalctl -u ai-relay-node`. |
+| Daemon exits immediately under systemd | Use absolute paths in `ExecStart` (`.venv/bin/python`), set `WorkingDirectory`, and `User=` to the owner of `~/.relay`. Check `journalctl -u iowap-node`. |
 | Daemon starts but won't claim | No `claimable: true` capability, or `handler` path missing/executable. `node-cli capabilities validate`. |
 | Handler `timeout` in results | Raise the `timeout:` field in the profile, or make the handler faster. |
 | mDNS name unreachable from the node | Use the IP address in `RELAY_BASE_URL`, or enable an mDNS reflector on the router. |
@@ -322,7 +322,7 @@ A minimal Proxmox VE container setup for a worker node.
 ```bash
 # On the Proxmox host (CTID 110)
 pct create 110 debian-12-standard \
-  --hostname ai-relay-worker \
+  --hostname iowap-worker \
   --cores 2 --memory 2048 --rootfs local-lvm:10 \
   --net0 name=eth0,bridge=vmbr0,ip=192.168.2.50/24,gw=192.168.2.1 \
   --unprivileged 0          # privileged: python-keyring needs keyctl

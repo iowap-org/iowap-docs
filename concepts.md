@@ -312,7 +312,7 @@ Stage:    pending → claimed → completed/failed/timed_out
 
 A node can be marked `busy` manually with `node-cli node busy` (and
 reverted with `node-cli node idle` or `node-cli node clear-status`).
-The request persists in `ai-relay-agent.json` and is forwarded on the
+The request persists in `iowap-agent.json` and is forwarded on the
 next heartbeat; the server validates the transition via the central
 registry and silently ignores invalid ones.
 
