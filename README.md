@@ -16,6 +16,7 @@
 │   └── admin.md             #   Administration & user management
 ├── node/                    # Node framework documentation
 │   ├── setup.md             #   Node installation & registration
+│   ├── ha-node.md           #   Home Assistant node (HAOS app + integration)
 │   ├── cli-reference.md     #   Full CLI reference
 │   ├── node-config.md       #   node.yaml configuration
 │   ├── node-daemon.md       #   Daemon operation & service management

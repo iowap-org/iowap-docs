@@ -349,5 +349,6 @@ pip install -e ".[dev]"
 - [token-lifecycle.md](token-lifecycle.md) — token types, refresh, recovery
 - [capabilities.md](capabilities.md) — capability formats and `node-cli` profiles
 - [cli-reference.md](cli-reference.md) — full `node-cli` command reference
+- [ha-node.md](ha-node.md) — Home Assistant as a node (HAOS app + integration, no manual setup)
 - [../server/admin.md](../server/admin.md) — node approval from the admin side
 - [../concepts.md](../concepts.md) — architecture and self-care pattern
