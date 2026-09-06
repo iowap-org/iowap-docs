@@ -52,6 +52,8 @@ capabilities validate/publish/diff). Pure-local subcommands
 | [`artifact`](#artifact) | Artifact upload / download |
 | [`docs`](#docs) | Read relay documentation from the server |
 | [`route`](#route) | Manage temporary bridge routes (register / unregister / list) |
+| [`hp put`](#hp-put) | Handler primitive: local file → transfer envelope (stdout) |
+| [`hp get`](#hp-get) | Handler primitive: transfer envelope → local file |
 
 ---
 
@@ -232,19 +234,28 @@ payload shape without an extra discovery round-trip.
 Complete a previously claimed stage by submitting a result dict from a JSON
 file.
 
+T-179: inside a handler, `stage_id` and `--task` fall back to the
+`RELAY_STAGE_ID` / `RELAY_TASK_ID` environment variables
+([handler-primitives.md](handler-primitives.md)) — explicit arguments
+win. Without any ID the command exits `1`.
+
 ### Syntax
 
 ```
 node-cli complete <stage_id> --task <task_id> --result-file <path>
+node-cli complete --result-file <path>            # IDs from RELAY_* env (handler context)
 ```
 
 ### Arguments
 
 | Argument | Required | Default | Description |
 |---|---|---|---|
-| `stage_id` | yes | — | Stage ID to complete |
-| `--task` | yes | — | Task ID the stage belongs to |
+| `stage_id` | yes* | `RELAY_STAGE_ID` | Stage ID to complete |
+| `--task` | yes* | `RELAY_TASK_ID` | Task ID the stage belongs to |
 | `--result-file` | yes | — | Path to a JSON file containing the result dict |
+
+\* Explicit arguments win; the env default applies in handler context.
+If neither argument nor env var is set, the command exits `1`.
 
 ### Example
 
@@ -259,6 +270,12 @@ On failure put the error inside the result dict:
 ```bash
 echo '{"error": "model unavailable"}' > /tmp/result.json
 node-cli complete stg_abc123 --task tsk_def456 --result-file /tmp/result.json
+```
+
+In handler context the IDs come from the environment:
+
+```bash
+node-cli complete --result-file /tmp/result.json   # RELAY_STAGE_ID / RELAY_TASK_ID
 ```
 
 ### Exit codes
@@ -421,18 +438,26 @@ collaborating nodes). Any approved node can add a note; every node that
 subsequently queries the task sees it. Notes are ordered by
 `created_at` and kept indefinitely (they are deleted with the task).
 
+T-179: inside a handler, `task_id` falls back to the `RELAY_TASK_ID`
+environment variable ([handler-primitives.md](handler-primitives.md)) —
+an explicit argument wins. Without any ID the command exits `1`.
+
 ### Syntax
 
 ```
 node-cli task note <task_id> <message>
+node-cli task note <message>            # task from RELAY_TASK_ID env (handler context)
 ```
 
 ### Arguments
 
-| Argument | Required | Description |
-|---|---|---|
-| `task_id` | yes | Task ID to add a note to |
-| `message` | yes | Note text (1..2000 characters) |
+| Argument | Required | Default | Description |
+|---|---|---|---|
+| `task_id` | yes* | `RELAY_TASK_ID` | Task ID to add a note to |
+| `message` | yes | — | Note text (1..2000 characters) |
+
+\* Explicit argument wins; the env default applies in handler context.
+If neither argument nor env var is set, the command exits `1`.
 
 ### Example
 
@@ -440,6 +465,9 @@ node-cli task note <task_id> <message>
 node-cli task note tsk_abc123 "starting fetch, ETA ~5s"
 # -> ✅ Note added to task tsk_abc123
 # ->    starting fetch, ETA ~5s (2026-07-20T10:23:11+00:00)
+
+# handler context: task ID from RELAY_TASK_ID
+node-cli task note "processed 3 files"
 ```
 
 ### Exit codes
@@ -1162,6 +1190,83 @@ node-cli file get bk_abc123 --cap backup.restore -o ./restore.tar.gz
 | 0 | Sent / downloaded successfully |
 | 1 | Server / network error, or task failed |
 | 2 | File not found, or invalid arguments |
+
+---
+
+## hp
+
+Handler primitives for handler scripts (T-179). Scripts call `node-cli`
+as a subprocess; the CLI process loads the token
+(`RELAY_TOKEN_FILE`), negotiates the transport and does the HTTP calls —
+scripts never touch the token or build requests themselves. Full
+reference with envelope schema and examples:
+[handler-primitives.md](handler-primitives.md).
+
+### hp put
+
+Wrap a local file as a transfer **envelope** — a JSON object with the
+`__iowap_ref__` marker key that `hp get` (on the receiving node) can
+resolve. The transfer rung (`inline`/`artifact`/`bridge`) is negotiated
+from the server ladder restricted by the receiving capability's
+`upload_modes`, exactly like `file send`. Prints **exactly one compact
+JSON line** (the envelope) to stdout.
+
+```
+node-cli hp put <path> --cap <capability> [--name <filename>]
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `path` | yes | Local file to wrap |
+| `--cap` | yes | Receiving capability (decides `upload_modes`) |
+| `--name` | no | Override the filename inside the envelope |
+
+Example inside a handler script:
+
+```bash
+envelope=$(node-cli hp put ./result.pdf --cap chat.ai)
+# hand $envelope to the receiver, e.g. as a task-payload field
+```
+
+| Code | Condition |
+|---|---|
+| 0 | Envelope printed |
+| 1 | Server / ladder decision error (e.g. file too big for all rungs) |
+| 2 | File not found |
+
+### hp get
+
+Resolve an `__iowap_ref__` envelope to a local file. Reads the envelope
+JSON from stdin (or `--file`), downloads/decodes it (`inline`: base64
+decode; `artifact`: download from the relay artifact store), verifies
+the `sha256` if present, and prints the local path as one compact JSON
+line. The file lands in `~/.relay/tmp/<task_id>/` (task id from
+`RELAY_TASK_ID`, `adhoc` outside a handler) unless `--output` is given.
+**MVP limit:** `bridge` envelopes are not resolved yet — clear error,
+exit `1`. (Same on the producing side: `hp put` cannot create bridge
+envelopes yet.)
+
+```
+node-cli hp get [--file <envelope.json>] [--output <path>] [--out-dir <dir>]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--file` | stdin | Read the envelope JSON from this file |
+| `--output`, `-o` | `<out_dir>/<filename>` | Explicit output path |
+| `--out-dir` | `~/.relay/tmp/${RELAY_TASK_ID:-adhoc}/` | Drop directory |
+
+Example inside a handler script:
+
+```bash
+path=$(node-cli hp get <<< "$payload.file_ref" | python3 -c 'import json,sys; print(json.load(sys.stdin)["path"])')
+```
+
+| Code | Condition |
+|---|---|
+| 0 | File written, path printed |
+| 1 | Envelope invalid / download failed / sha256 mismatch / bridge not supported |
+| 2 | Invalid JSON input, or no `__iowap_ref__` key |
 
 ---
 

@@ -402,6 +402,18 @@ Key points:
   `max_retries`, default 2 → 3 attempts total). Once the budget is
   exhausted the stage is marked `failed` permanently and the owning task
   is failed too when all its stages are terminal.
+- **Opt-in: complete-by-script.** A capability may set
+  `config.complete_by_script: true` (see
+  [capability-concept.md](capability-concept.md)): the handler then
+  completes its own stage via `node-cli complete` (task/stage IDs
+  default to `RELAY_TASK_ID`/`RELAY_STAGE_ID`) and leaves stdout empty.
+  The daemon's fallback complete gets the relay's *already completed*
+  404 and counts the stage as success. Without the flag the contract
+  above applies unchanged.
+- **Opt-in: file transfer via `hp put` / `hp get`.** Handler primitives
+  to move files into/out of tasks as `__iowap_ref__` envelopes
+  (inline/artifact/bridge ladder) — see
+  [capability-concept.md](capability-concept.md).
 - **Crash safety.** If the daemon itself is killed mid-claim, the stage is
   not lost — the relay's claim-TTL watchdog releases it automatically. No
   manual intervention needed. If the node stays offline, the heartbeat

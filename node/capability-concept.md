@@ -273,15 +273,47 @@ node-cli task submit --capability chat.ai \
 | **Script → API** (`type: shell`) | Calls an external HTTP API | `weather.current` — calls OpenWeatherMap |
 | **AI** (`type: ai`) | Calls a local or remote LLM | `chat.ai` — calls Ollama |
 
-The handler contract is always the same:
+The default handler contract is always the same:
 1. Task payload arrives on **stdin** as JSON
 2. Handler processes it (runs a command, calls an API, invokes an LLM)
 3. Handler writes the result to **stdout** as JSON
 4. Node reads stdout and completes the stage
 
+### Opt-in extensions (complete-by-script, file transfer)
+
+A capability can opt in to extended contract features via its
+`config` block (all optional, default behavior unchanged):
+
+```yaml
+capabilities:
+  - name: chat.ai
+    config:
+      complete_by_script: true   # script completes the stage itself
+```
+
+- **`complete_by_script: true`** — the handler script completes its own
+  stage with `node-cli complete` (task/stage IDs default to the
+  `RELAY_TASK_ID`/`RELAY_STAGE_ID` environment variables every handler
+  receives). Leave stdout empty in that case: the node daemon still
+  attempts its fallback complete, and the relay's *"already
+  completed"* 404 is counted as success instead of a failure. Without
+  the flag the daemon behaves exactly as with the default contract.
+- **`node-cli hp put` / `hp get`** — handler primitives for moving a
+  local file into (and out of) a task as an *envelope*: a JSON object
+  with an `__iowap_ref__` key that selects the transfer ladder
+  (`inline` → base64 in the envelope, `artifact` → transient relay
+  artifact store, `bridge` → storage node). `hp put <path> --cap <cap>`
+  picks the smallest rung the capability supports (same ladder logic as
+  `node-cli file send`) and prints the envelope to stdout;
+  `hp get` reads the envelope from stdin (or `--file`), writes the file
+  under `~/.relay/tmp/<task_id>/`, verifies its `sha256` if present, and
+  prints the local path as compact JSON
+  (`{"path": "...", "size_bytes": N, "src": "inline"}`).
+
 ## See also
 
 - **[capabilities.md](capabilities.md)** — detailed reference: naming & suffixes, `chat.ai` vs `agent.ai`, `node.yaml` format, Dynamic Routes, handler contract, validation rules, metadata forwarding
+- **[handler-primitives.md](handler-primitives.md)** — full reference for the opt-in handler primitives: `hp put/get` envelopes, env-defaults for complete/note, `complete_by_script`
 - **[node-config.md](node-config.md)** — `node.yaml` reference with all fields
 - **[ssn.md](ssn.md)** — SSN capability pages and proxy
 - **[concept.md](concept.md)** — what a node is
