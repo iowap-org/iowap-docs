@@ -393,10 +393,16 @@ day only ever holds the last week's worth.
 
 The three transfer modes form a deterministic size-based ladder (T-164):
 inline (base64, ≤ `max_inline_bytes`) → artifact (transient store, ≤
-`max_artifact_bytes`) → bridge (direct stream to a storage node, larger
-files). The node-cli's `file send`/`file get` pick the smallest supported
-rung automatically. See [node/storage.md](node/storage.md) and
-[node/capabilities.md](node/capabilities.md#upload_modes--datei-übertragungs-treppe-t-164).
+`max_artifact_bytes`) → bridge (direct stream, larger files). The
+node-cli's `file send`/`file get` pick the smallest supported
+rung automatically. The `bridge` rung has two flavors: the classic
+**storage-node bridge** (direct stream to a storage node, see
+[node/storage.md](node/storage.md)) and, since T-166, the **ephemeral
+node serve** used by `hp put`/`hp get` — the file is served from the
+*sending* node's daemon and self-destructs after the first successful
+download (no storage node, no server-side copy). See
+[node/capabilities.md](node/capabilities.md#upload_modes--datei-übertragungs-treppe-t-164)
+and [node/handler-primitives.md](node/handler-primitives.md#bridge-rung-ephemeral-node-serve-t-166).
 
 ## Observability (T-109)
 

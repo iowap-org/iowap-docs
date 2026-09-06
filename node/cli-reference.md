@@ -1231,20 +1231,22 @@ envelope=$(node-cli hp put ./result.pdf --cap chat.ai)
 | Code | Condition |
 |---|---|
 | 0 | Envelope printed |
-| 1 | Server / ladder decision error (e.g. file too big for all rungs) |
+| 1 | Server / ladder decision error (e.g. file too big for all rungs), ephemeral serve unreachable, or bridge route registration failed |
 | 2 | File not found |
+
+Environment: `IOWAP_SERVE_COUNT` (1–10, default 1) — number of
+downloads before the staged file self-destructs (bridge rung only).
 
 ### hp get
 
 Resolve an `__iowap_ref__` envelope to a local file. Reads the envelope
 JSON from stdin (or `--file`), downloads/decodes it (`inline`: base64
-decode; `artifact`: download from the relay artifact store), verifies
+decode; `artifact`: download from the relay artifact store; `bridge`:
+pull from the sending node's ephemeral serve via relay proxy —
+T-166), verifies
 the `sha256` if present, and prints the local path as one compact JSON
 line. The file lands in `~/.relay/tmp/<task_id>/` (task id from
 `RELAY_TASK_ID`, `adhoc` outside a handler) unless `--output` is given.
-**MVP limit:** `bridge` envelopes are not resolved yet — clear error,
-exit `1`. (Same on the producing side: `hp put` cannot create bridge
-envelopes yet.)
 
 ```
 node-cli hp get [--file <envelope.json>] [--output <path>] [--out-dir <dir>]
@@ -1265,7 +1267,7 @@ path=$(node-cli hp get <<< "$payload.file_ref" | python3 -c 'import json,sys; pr
 | Code | Condition |
 |---|---|
 | 0 | File written, path printed |
-| 1 | Envelope invalid / download failed / sha256 mismatch / bridge not supported |
+| 1 | Envelope invalid / download failed / sha256 mismatch / bridge pull failed (e.g. transfer already consumed or expired) |
 | 2 | Invalid JSON input, or no `__iowap_ref__` key |
 
 ---
@@ -1287,6 +1289,8 @@ All paths are relative to `~/.relay/` unless noted.
 | `relay_config.json` | Daemon settings — see [setup.md](setup.md) |
 | `node-cli.pid` | Daemon PID file |
 | `node-cli.log` | Daemon log file |
+| `serve.json` | Ephemeral serve manifest (bound port, written by the daemon at startup — T-166) |
+| `serve/` | Staged ephemeral-transfer files (removed after the final download — T-166) |
 
 ### `relay_config.json` defaults
 

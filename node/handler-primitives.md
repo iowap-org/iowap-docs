@@ -39,7 +39,7 @@ prints it on stdout, `hp get` consumes it:
 | `filename` | all | Original file name (informational, not trusted for paths) |
 | `size_bytes` | all | Unencoded file size in bytes |
 | `data_base64` | `inline` | File content, base64-encoded |
-| `sha256` | `inline` (optional for others) | Digest for verification on `hp get` |
+| `sha256` | all | Digest for verification on `hp get` (always present since T-166; `inline` computes it, `artifact`/`bridge` carry the sender's digest) |
 | `artifact_id` | `artifact` | Reference into the relay's transient artifact store |
 | `storage_ref` | `bridge` | Opaque storage reference (channel/backup id) |
 
@@ -63,15 +63,47 @@ the capability's `upload_modes` — the same decision logic as
 2. `artifact` if allowed and `size <= max_artifact_bytes`
 3. else: error `file too big: … (server ladder: inline<=…, artifact<=…)`
 
-MVP limit on the producing side: `bridge` envelopes can be *represented*
-in the format, but `hp put` cannot build one yet (the bridge
-channel-open flow is a follow-up) — a capability that only declares
-`upload_modes: [bridge]` currently yields the `file too big` error.
+MVP limit on the producing side: ~~`bridge` envelopes can be *represented*
+in the format, but `hp put` cannot build one yet~~ — **obsolete since
+T-166**: `hp put` builds `bridge` envelopes via the ephemeral node serve
+(see [bridge rung](#bridge-rung-ephemeral-node-serve-t-166) below).
 
 Exit codes: `0` ok, `1` server/decision error, `2` usage (file missing).
 
-MVP limit: `hp get` resolves `inline` and `artifact`; **`bridge`-get is
-not yet supported** (clear error message; use `artifact` for now).
+`hp get` resolves `inline`, `artifact` **and** `bridge` (T-166).
+
+## bridge rung (ephemeral node serve, T-166)
+
+The `bridge` rung skips server-side storage entirely: the file is
+served **from the sending node's daemon** and dies after the transfer.
+
+**Producer (`hp put`, mode `bridge`):**
+
+1. Discovers the daemon's serve endpoint via `~/.relay/serve.json`
+   (written by the node daemon at startup) and probes it. Unreachable →
+   `hp put: ephemeral serve not reachable (is the node daemon running?) —
+   use artifact fallback`, exit `1`.
+2. Stages the file to `~/.relay/serve/<transfer_id>` (22-char
+   `secrets.token_urlsafe(16)` id), `max_downloads=1` by default.
+3. Registers a temporary route `POST /download/<transfer_id>` (TTL
+   3600 s) on the relay, pointing at the local serve endpoint.
+   Registration failure → staged file removed, exit `1`.
+
+**Consumer (`hp get`, `storage_ref = {"type": "node_serve", "node_id",
+"path", "expires_at"}`):** pulls `{base_url}/relay/v2/dashboard/api/
+node-routes/<node_id><path>` via **POST with empty body** + Bearer
+token, streams to disk, verifies `sha256`. The consumer **never
+unregisters** — Ephemeralität is the sender daemon's job (F6/F7).
+
+**Ephemeralität:** after the Nth successful download (default 1) the
+daemon deletes file + manifest and unregisters the relay route; a
+second `hp get` fails with a transport error (relay 404). A TTL sweep
+is the backstop for never-pulled transfers (default TTL 3600 s).
+Set `IOWAP_SERVE_COUNT` (1–10) to allow N downloads instead of 1.
+
+**Requirements:** the sending node's daemon must run (it hosts the
+serve thread on `127.0.0.1:8792`, env `IOWAP_SERVE_PORT`; bind failure
+degrades to a warning — `hp put` then reports the unreachable serve).
 
 ## `hp get` — resolve an envelope
 
