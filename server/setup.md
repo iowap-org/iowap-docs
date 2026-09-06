@@ -402,7 +402,8 @@ chunked_uploads_dir: "~/.relay/chunked_uploads"
 token_ttl_hours: 168                  # runtime token TTL (7 days)
 registration_secret_ttl_hours: 168       # 7 days (T-088), matches token_ttl_hours
 temporary_token_ttl_hours: 24
-claim_ttl_seconds: 60                 # how long a stage can stay "claimed"
+claim_ttl_seconds: 60                  # 60–300 — how long a stage can stay "claimed";
+                                       # dashboard-editable (T-181), effective without restart
 heartbeat_interval_seconds: 10
 heartbeat_timeout_multiplier: 5       # offline after 5 missed heartbeats
 
@@ -417,8 +418,8 @@ max_payload_bytes: 10485760           # 10 MiB  — task payload
 max_chunk_size: 10485760              # 10 MiB  — per chunked-upload chunk
 
 # Scheduler
-default_timeout_seconds: 300
-max_retries: 2
+default_timeout_seconds: 300          # task metadata, stored at submit — NOT a kill timer
+max_retries: 2                        # 0–10 re-queues for an expired claim — dashboard-editable (T-181)
 
 # SSN (Server-Side Node) — T-069
 ssn_enabled: false               # set true to start/stop the SSN unit with the server

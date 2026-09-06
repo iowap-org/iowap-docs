@@ -133,6 +133,8 @@ Pages and JSON API used by the dashboard UI. Session-cookie auth unless noted.
 | GET | `/relay/v2/dashboard/api/permissions` | session | List permissions |
 | POST | `/relay/v2/dashboard/api/groups/{group_id}/permissions` | session | Set group permissions |
 | GET | `/relay/v2/dashboard/api/metrics` | session | Bundled metrics JSON for the built-in metrics dashboard (T-109) |
+| GET | `/relay/v2/dashboard/api/scheduler-config` | session (system:config) | T-181: current scheduler claim settings — returns `{claim_ttl_seconds, max_retries}` |
+| POST | `/relay/v2/dashboard/api/scheduler-config` | session (system:config) | T-181: edit claim settings. Form fields: `claim_ttl_seconds` (60–300), `max_retries` (0–10). Applied immediately without restart; the claim watchdog re-registers with the fresh interval |
 | GET | `/relay/v2/dashboard/metrics` | session | Built-in metrics dashboard HTML page (T-109) |
 | GET | `/relay/v2/dashboard/static/{filename}` | none | Static dashboard assets |
 

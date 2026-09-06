@@ -381,7 +381,7 @@ to the relay as the result.
 | Exit `0`, stdout is **not** valid JSON | Fail the stage (counted against `max_retries`) | `{"error": "handler stdout is not valid JSON: ..."}` |
 | Exit non-zero (any code `N`) | Fail the stage (counted against `max_retries`) | `{"error": "handler exited with code N", "stderr": ...}` |
 | Timeout exceeded | `SIGTERM` then `SIGKILL` after a short grace | `{"error": "handler timeout after Ns"}` |
-| `SIGKILL` / host shutdown while claimed | The stage stays `claimed` until `claim_ttl_seconds` (default 60 s) elapses, then the scheduler releases it back to `pending` for another node to claim | — |
+| `SIGKILL` / host shutdown while claimed | The stage stays `claimed` until `claim_ttl_seconds` (default 60 s, dashboard-editable 60–300 s — applies without restart, T-181) elapses, then the scheduler releases it back to `pending` for another node to claim | — |
 
 Key points:
 
