@@ -102,8 +102,27 @@ is the backstop for never-pulled transfers (default TTL 3600 s).
 Set `IOWAP_SERVE_COUNT` (1–10) to allow N downloads instead of 1.
 
 **Requirements:** the sending node's daemon must run (it hosts the
-serve thread on `127.0.0.1:8792`, env `IOWAP_SERVE_PORT`; bind failure
-degrades to a warning — `hp put` then reports the unreachable serve).
+serve thread, env `IOWAP_SERVE_PORT`; bind failure degrades to a
+warning — `hp put` then reports the unreachable serve).
+
+**Bind/advertise host (D8):** the serve binds and advertises via
+`serve_host()`: env `IOWAP_SERVE_HOST`, default `127.0.0.1`
+(single-host deployments: relay dials the node on the same machine —
+plan behaviour). For relay-on-LXC / node-on-LAN deployments set
+`IOWAP_SERVE_HOST` to the node's LAN IP so the relay proxy can reach
+the serve (`0.0.0.0` works for the bind; the manifest advertises the
+same value). Invalid values fall back to the default with a warning.
+
+**Source-IP allowlist (D9):** whenever the serve is reachable beyond
+loopback, every request's **socket peer** (`X-Forwarded-For` is never
+trusted) is checked against an allowlist resolved once at bind time:
+the relay's IP (env `IOWAP_SERVE_ALLOW` override, else resolved from
+the node's relay config base URL), the advertise host's IP (the local
+CLI probes the advertise address), and loopback. Everything else gets
+`403 {"error":"forbidden"}` — fail-closed: if the relay IP cannot be
+resolved, remote peers are rejected (warning at bind; set
+`IOWAP_SERVE_ALLOW` and restart the daemon). Single-host deployments
+(loopback bind only) are unaffected.
 
 ## `hp get` — resolve an envelope
 

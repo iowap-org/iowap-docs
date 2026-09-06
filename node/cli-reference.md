@@ -1236,6 +1236,10 @@ envelope=$(node-cli hp put ./result.pdf --cap chat.ai)
 
 Environment: `IOWAP_SERVE_COUNT` (1–10, default 1) — number of
 downloads before the staged file self-destructs (bridge rung only).
+`IOWAP_SERVE_HOST` (default `127.0.0.1`) — serve bind/advertise host;
+`IOWAP_SERVE_ALLOW` — explicit allowlist override (relay peer IP,
+else auto-resolved; see [handler primitives](handler-primitives.md)
+D8/D9).
 
 ### hp get
 
