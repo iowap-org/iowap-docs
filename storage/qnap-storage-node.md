@@ -137,6 +137,8 @@ The storage node provides:
 
 ## Source code
 
-The storage node lives in the repo under `docker/nodes/storage/`. The base
-image is under `docker/nodes/base/`. See `docs/node/storage.md` for the full
-architecture.
+The storage node's Python code lives in the
+**[iowap-org/iowap-storage](https://github.com/iowap-org/iowap-storage)** repo
+(handlers, bridge server, retention watchdog); the Docker images are built
+from **[iowap-org/iowap-docker](https://github.com/iowap-org/iowap-docker)**
+(`base/`, `storage/`). See `docs/node/storage.md` for the full architecture.

@@ -46,7 +46,8 @@ capabilities validate/publish/diff). Pure-local subcommands
 | [`task wait`](#task-wait) | Poll until a task completes, streaming new notes live |
 | [`task note`](#task-note) | Append a free-form note to a task (mini-chat) |
 | [`capabilities`](#capabilities) | Capability profile management & server discovery |
-| [`node`](#node) | List nodes and show node details from the relay server |
+| [`node`](#node) | Node operations: register this node, list nodes, node details, busy/idle/status |
+| [`server`](#server) | Inspect a relay server without credentials (health / metrics) |
 | [`status`](#status) | Print `worker_status.json` |
 | [`reload`](#reload) | Send SIGHUP to running daemon |
 | [`artifact`](#artifact) | Artifact upload / download |
@@ -614,9 +615,11 @@ node-cli capabilities info chat.ai
 
 ## node
 
-Node operations against the relay server. Query the registered nodes and show
-details for a single node (T-071). Use [`capabilities server`](#capabilities)
-to discover which capabilities each node advertises.
+Node operations against the relay server: register this node on a server
+(`register`, T-178), query the registered nodes and show details for a single
+node (T-071), or manage this node's busy/idle status (T-084). Use
+[`capabilities server`](#capabilities) to discover which capabilities each
+node advertises.
 
 ### Syntax
 
@@ -625,6 +628,43 @@ node-cli node <action>
 ```
 
 ### Actions
+
+#### `register` (T-178)
+
+Register this node on a relay server — **first-class registration without a
+curl client**: the command runs with no existing state files ("chicken-and-egg
+free"), creates them itself, and writes nothing on failure.
+
+```
+node-cli node register <server> [--name NAME] [--force] [--timeout SECONDS] [--json]
+```
+
+| Argument | Description |
+|---|---|
+| `server` | Relay server: IP/host, `IP:port`, or full URL (default port 8788) |
+| `--name` | Node name (default: hostname) |
+| `--force` | Re-register even if local node state already exists |
+| `--timeout` | HTTP timeout for the registration request (default 15 s) |
+| `--json` | Machine-readable output |
+
+```bash
+node-cli node register 192.168.2.10:8788 --name my-node
+# -> ✅ Node registered: my-node (ID=V34ETT74)
+# ->    Server:  http://192.168.2.10:8788
+# ->    Status:  pending
+# ->    Token:   temporary tp_-token, expires 2026-09-07T15:00:00+00:00
+# ->
+# ->    ⏳ Node is pending — an admin must approve it (dashboard or admin API)
+# ->       before it can claim work.
+# ->    Next: node-cli capabilities publish <profile> && node-daemon
+```
+
+Persists `~/.relay/iowap-agent.json` (state: `node_id`, `node_name`,
+`registration_secret`, `capabilities`, `base_url`) and
+`~/.relay/iowap-agent.token` (runtime token, JSON envelope with
+`expires_at`). The registered node starts with an empty capability list;
+capabilities come from a profile via [`capabilities publish`](#capabilities).
+See [setup.md](setup.md#2-register-the-node) for the full registration flow.
 
 #### `list`
 
@@ -764,6 +804,51 @@ node-cli node status
 |---|---|
 | 0 | Action succeeded |
 | 1 | HTTP / network error, or `info` did not find a node with the given `node_id` |
+
+---
+
+## server
+
+Inspect a relay server **without node credentials** — one-shot health and
+Prometheus metrics probes (T-178). Useful for smoke tests and monitoring
+scripts; never sends tokens.
+
+```
+node-cli server health [server] [--json]
+node-cli server metrics [server] [--json]
+```
+
+| Argument | Description |
+|---|---|
+| `server` | Optional: IP/host, `IP:port`, or full URL (default port 8788). Omitted, the relay URL from the local state file is used |
+| `--json` | Machine-readable output |
+
+```bash
+node-cli server health 192.168.2.10:8788
+# -> ✅ http://192.168.2.10:8788 — IOWAP 2.x (server)
+# ->    Database:  ok
+# ->    Scheduler: ok
+# ->    Nodes:     3/4 online
+# ->    Queue:     1 tasks waiting
+# ->    Tasks:     42 completed, 2 failed
+
+node-cli server metrics relay.example.com
+# -> Server metrics (http://relay.example.com:8788):
+# ->    nodes_online               3
+# ->    queue_depth                1
+# ->    ...
+```
+
+`health` probes `/health` + `/ready` and prints version, mode, database and
+scheduler state plus node/queue/task counters. `metrics` merges the same
+probe with the Prometheus gauge values from `/metrics`.
+
+### Exit codes
+
+| Code | Condition |
+|---|---|
+| 0 | Server reachable (and, with `--json`, `ok: true`) |
+| 1 | Server unreachable or probe failed |
 
 ---
 

@@ -17,79 +17,50 @@ behind nodes, capabilities, and tokens see [../concepts.md](../concepts.md) and
 
 ## 1. Install the node code
 
-Nodes are **not** installed via `pip install -e .` for the server. Clone the
-repo and run the node modules directly:
+Nodes are **not** installed from `iowap-server`. The node framework lives in
+its own repo, **[iowap-org/iowap-node](https://github.com/iowap-org/iowap-node)**.
+Clone it and install the package — this provides the `node-cli` and
+`node-daemon` console scripts:
 
 ```bash
-git clone https://github.com/iowap-org/iowap-server.git
-cd iowap-server
+git clone https://github.com/iowap-org/iowap-node.git
+cd iowap-node
 python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"      # server deps reused (httpx, pyyaml, pydantic)
+pip install -e .
 ```
 
-> The repo ships documentation as a git submodule under `docs/`. The **server**
-> needs it (`git clone --recursive`) because it serves docs at `/relay/v2/docs/`.
-> For a **node** the submodule is optional — the CLI reads docs from the server,
-> not locally. If you already cloned with `--recursive`, the extra files are
-> harmless.
+`iowap-node` has no git submodules and needs no server checkout; the CLI
+reads docs from the relay at runtime (`node-cli docs`), not locally.
 
-> **Note on the `node-cli` command:** the `node-cli` console script was
-> removed from the server package and is **no longer installed**. Always
-> invoke the CLI via its module path:
+> **Note on the `node-cli` command:** `node-cli` and `node-daemon` are real
+> entrypoints of the `iowap-node` package (see `[project.scripts]` in its
+> `pyproject.toml`) and on `$PATH` after `pip install -e .`. Every command
+> below can also be invoked via its module path — useful inside systemd
+> units or venvs without shell aliases:
 >
 > ```bash
 > python -m nodes.common.node_cli <command> [options]
-> ```
->
-> The examples in this guide use the shorthand `node-cli` for readability —
-> read it as `python -m nodes.common.node_cli`. If you want a real
-> `node-cli` command in your shell, add an alias or a tiny wrapper:
->
-> ```bash
-> # ~/.bashrc or ~/.zshrc
-> alias node-cli='python -m nodes.common.node_cli'
-> # or, a wrapper on $PATH that works everywhere (incl. systemd):
-> echo 'exec python -m nodes.common.node_cli "$@"' | sudo tee /usr/local/bin/node-cli && sudo chmod +x /usr/local/bin/node-cli
+> python -m nodes.common.node_daemon            # = node-daemon
 > ```
 
 ## 2. Register the node
 
-Register once against the relay:
+`node register` (T-178) is a first-class command: it runs without existing
+state files, creates them itself, and writes nothing on failure.
 
 ```bash
-curl -X POST "http://${RELAY_HOST}:8788/relay/v2/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "node_name": "my-node",
-    "endpoint": null,
-    "role": "node",
-    "capabilities": [{"name": "chat.ai", "version": "1.0.0"}]
-  }' | tee /tmp/register.json
+node-cli node register 192.168.2.10:8788      # IP:port or full URL (default port 8788)
+node-cli node register http://192.168.2.10:8788 --name my-node --json
+# Re-registering an existing identity requires --force
 ```
 
-Save the response — it contains your `node_id`, a temporary token (`tp_…`,
-24 h), and a `registration_secret` (`rs_…`, 12 h):
+The response contains your `node_id`, a temporary token (`tp_…`, 24 h) and a
+`registration_secret` (`rs_…`, 12 h). `node register` persists both directly:
 
-```json
-{
-  "node_id": "V34ETT74",
-  "status": "pending",
-  "token": "tp_...",
-  "registration_secret": "rs_..."
-}
-```
-
-## 3. Persist the state file
-
-Persist the response in `~/.relay/iowap-agent.json`. The runtime token lives
-separately in `~/.relay/iowap-agent.token` so it can be rotated without
-rewriting the state file.
-
-```bash
-mkdir -p ~/.relay
-jq '{node_id, node_name, registration_secret, capabilities, base_url: "http://'${RELAY_HOST}':8788"}' \
-  /tmp/register.json > ~/.relay/iowap-agent.json
-```
+- `~/.relay/iowap-agent.json` — state file (`node_id`, `node_name`,
+  `registration_secret`, `capabilities`, `base_url`)
+- `~/.relay/iowap-agent.token` — runtime token (JSON envelope with
+  `expires_at`; legacy plaintext files are migrated on the next refresh)
 
 State file schema:
 
@@ -97,14 +68,21 @@ State file schema:
 {
   "node_id": "V34ETT74",
   "node_name": "my-node",
-  "endpoint": "http://192.168.1.60:9000",
+  "endpoint": null,
   "registration_secret": "rs_...",
-  "capabilities": [{"name": "chat.ai", "version": "1.0.0"}],
-  "base_url": "http://192.168.1.50:8788"
+  "capabilities": [],
+  "base_url": "http://192.168.2.10:8788"
 }
 ```
 
-## 4. Wait for approval
+> Manual alternative (e.g. for scripted setups): `POST /relay/v2/auth/register`
+> with `{"node_name": ..., "endpoint": null, "role": "node",
+> "capabilities": [...]}`, then persist the response fields as above — this
+> is exactly what `node register` does internally.
+
+The node is now `pending`; continue with step 3.
+
+## 3. Wait for approval
 
 The node is now `pending` and cannot claim work. An admin must activate it
 in the dashboard or via the admin API (see [../server/admin.md](../server/admin.md)).
@@ -123,7 +101,7 @@ curl -X POST "http://${RELAY_HOST}:8788/relay/v2/auth/status" \
 { "node_id": "V34ETT74", "status": "pending", "message": "Awaiting admin activation" }
 ```
 
-## 5. Obtain the runtime token
+## 4. Obtain the runtime token
 
 After approval, obtain a runtime token. The admin may provide it, or the node
 recovers it with the registration secret:
@@ -151,7 +129,7 @@ jq -r .registration_secret /tmp/refresh.json
 See [token-lifecycle.md](token-lifecycle.md) for the full refresh and recovery
 flow.
 
-## 6. Define capability profiles
+## 5. Define capability profiles
 
 The `node-cli` daemon is **capability-agnostic**: all capabilities are defined
 in external YAML profiles. The daemon reads only
@@ -182,12 +160,12 @@ python -m nodes.common.node_cli capabilities publish default
 See [capabilities.md](capabilities.md) for the full profile format and the
 handler contract.
 
-## 7. Start the daemon
+## 6. Start the daemon
 
 ### Foreground (test)
 
 ```bash
-cd ~/iowap-server && source .venv/bin/activate
+cd ~/iowap-node && source .venv/bin/activate
 python -m nodes.common.node_cli daemon foreground
 ```
 
@@ -213,9 +191,9 @@ After=network-online.target
 [Service]
 Type=simple
 User=felix
-WorkingDirectory=/home/felix/iowap-server
+WorkingDirectory=/home/felix/iowap-node
 Environment=RELAY_BASE_URL=http://192.168.2.10:8788
-ExecStart=/home/felix/iowap-server/.venv/bin/python -m nodes.common.node_cli daemon foreground
+ExecStart=/home/felix/iowap-node/.venv/bin/python -m nodes.common.node_cli daemon foreground
 Restart=always
 RestartSec=10
 
@@ -229,7 +207,7 @@ sudo systemctl enable --now iowap-node.service
 systemctl status iowap-node.service
 ```
 
-## 8. Verify
+## 7. Verify
 
 - `python -m nodes.common.node_cli status` shows the last heartbeat.
 - `~/.relay/worker_status.json` is written after every heartbeat.
@@ -246,8 +224,7 @@ python -m nodes.common.node_cli status
 
 - [ ] Know the relay URL
 - [ ] Install the node code
-- [ ] Register via `/relay/v2/auth/register`
-- [ ] Save `node_id` and `registration_secret` to `~/.relay/iowap-agent.json`
+- [ ] Register via `node-cli node register <server>` (or `POST /relay/v2/auth/register`)
 - [ ] Wait until the admin activates the node (poll `/auth/status`)
 - [ ] Obtain the runtime token → `~/.relay/iowap-agent.token`
 - [ ] Define and publish a capability profile
@@ -334,10 +311,10 @@ apt update && apt -y install python3 python3-venv python3-pip git sudo curl jq
 adduser felix && usermod -aG sudo felix
 sudo -u felix bash
 cd ~
-git clone https://github.com/iowap-org/iowap-server.git
-cd iowap-server
+git clone https://github.com/iowap-org/iowap-node.git
+cd iowap-node
 python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e .
 # then continue with step 2 of this guide (register, approve, daemon)
 ```
 

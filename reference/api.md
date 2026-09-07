@@ -89,6 +89,26 @@ node/task/stage/user status transition with the payload
 | POST | `/relay/v2/storage/chunked/{upload_id}/chunk` | `rt_...` | Upload one chunk |
 | POST | `/relay/v2/storage/chunked/{upload_id}/complete` | `rt_...` | Finalise a chunked upload |
 
+## Cluster — `/relay/v2/cluster`
+
+Public endpoints backing the Community Dashboard (T-166): aggregated,
+privacy-safe views of the cluster. **No authentication** — these endpoints
+never expose tokens, secrets, emails, or password hashes; the synthetic
+dashboard-admin node is excluded.
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/relay/v2/cluster/overview` | none | Cluster summary: counts, compact node list, queue/task stats |
+| GET | `/relay/v2/cluster/nodes` | none | Public node directory (name, role, status, capabilities) |
+| GET | `/relay/v2/cluster/nodes/{node_id}` | none | Public profile of a single node (incl. load history) |
+| GET | `/relay/v2/cluster/users` | none | Pseudonymised user directory (no emails, no hashes) |
+| GET | `/relay/v2/cluster/users/{user_id}` | none | Public profile of a single user |
+| GET | `/relay/v2/cluster/activity` | none | Recent cluster activity events (`?limit=1–200`, default 50) |
+
+Implementation: `api/v2/cluster.py` (mounted with prefix `/cluster` under
+`/relay/v2`). The same views power the dashboard's community page; fields are
+trimmed server-side to the public row shapes (`_public_node_row` et al.).
+
 ## Capability dashboard pages — SSN (`ssn.capability-pages`)
 
 Capability dashboard pages are **no longer served by the relay itself**.

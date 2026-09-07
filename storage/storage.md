@@ -2,8 +2,12 @@
 
 The storage node is a **service node** (role `service`, not `worker`)
 that provides NAS-backed file storage to the relay. It is the first
-concrete service image built on top of the node base image
-(`docker/nodes/base/`), shipped as `docker/nodes/storage/`.
+concrete service image built on top of the node base image. The Python
+code lives in **[iowap-org/iowap-storage](https://github.com/iowap-org/iowap-storage)**
+(handlers, bridge server, retention watchdog); Docker packaging — base
+and storage images plus compose files — lives in
+**[iowap-org/iowap-docker](https://github.com/iowap-org/iowap-docker)**
+(`base/`, `storage/`).
 
 ## What it offers
 
@@ -27,7 +31,7 @@ concrete service image built on top of the node base image
 | `backup.delete` | ✅ | Mark a backup `deleted` (manifest kept for audit, data removed). |
 | `backup.retention` | ✅ | Apply a retention policy to a source (keep_last / max_age_days / GFS). |
 
-The core handlers live in `docker/nodes/storage/handlers/*.py` and share a
+The core handlers live in `handlers/*.py` (iowap-storage repo) and share a
 common `_common.py` that enforces the path-traversal guard `_safe_path`
 (ported from the legacy `storage_node.py`) — every caller-supplied path
 is resolved relative to `/storage` and rejected if it escapes after
@@ -39,7 +43,7 @@ For large files, the regular task-complete path (returning `data_base64`
 in the result) would load the whole file into RAM. Instead, the storage
 node runs a small HTTP server alongside the daemon:
 
-- `docker/nodes/storage/bridge_server.py` — Starlette server on `0.0.0.0:8791`.
+- `bridge_server.py` (iowap-storage repo) — Starlette server on `0.0.0.0:8791`.
 - Endpoints: `POST /upload/{channel_id}` (stream body → NAS) and
   `GET /download/{channel_id}` (stream NAS file → caller).
 - **Source-IP-Allowlist middleware**: every request's source IP is
@@ -94,14 +98,16 @@ back to the caller).
 
 ## Running it
 
-See [`docker/README.md`](../../docker/README.md) for the build + compose
-walkthrough. The short version:
+See the
+**[iowap-docker README](https://github.com/iowap-org/iowap-docker)** for the
+build + compose walkthrough. The short version:
 
 ```
-docker build -t iowap-node-base -f docker/nodes/base/Dockerfile .
-docker build -t iowap-storage  -f docker/nodes/storage/Dockerfile .
+# from a checkout of iowap-org/iowap-docker
+docker build -t iowap-node-base -f base/Dockerfile .
+docker build -t iowap-storage  -f storage/Dockerfile .
 RELAY_URL=https://relay.example.com STORAGE_DIR=/mnt/nas \
-    docker compose -f docker/nodes/storage/docker-compose.yml up -d
+    docker compose -f storage/docker-compose.yml up -d
 ```
 
 The node registers on first start (status `pending`) — approve it via
@@ -170,7 +176,7 @@ Result: `{status: "applied", source, deleted: [backup_id, ...], count}`.
 
 ### Retention watchdog
 
-A background process (`docker/nodes/storage/retention_watchdog.py`) applies
+A background process (`retention_watchdog.py`, iowap-storage repo) applies
 configured retention policies periodically, analogous to the server's
 `MaintenanceScheduler`. Policies are read from `~/.relay/retention.yaml`
 (or `RELAY_RETENTION_CONFIG`):
