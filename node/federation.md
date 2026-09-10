@@ -1,5 +1,11 @@
 # Federation Node — Concept
 
+> **⚠️ Moved (2026-08-27).** Federation ist ein eigenes Sub-Projekt geworden.
+> Das aktuelle Design-Doc lebt jetzt im Repo
+> **[iowap-org/iowap-federation](https://github.com/iowap-org/iowap-federation)**
+> unter `docs/federation.md`. Diese Kopie ist historisch und wird nicht mehr
+> gepflegt.
+
 > **⚠️ Concept — not yet implemented.** This document describes the planned
 > Federation Node based on discussions (2026-08-01) and subsequent design
 > refinements (2026-08-03). No code exists yet.
