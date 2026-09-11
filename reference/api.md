@@ -34,7 +34,7 @@ For node-side usage see [../node/setup.md](../node/setup.md).
 | POST | `/relay/v2/discovery/worker-heartbeat` | `rt_...` | Worker heartbeat variant — accepts full capability dicts and **replaces** the node's advertised capabilities (`replace_capabilities=True`). Same payload fields as `/heartbeat` (`load`, `queue_depth`, `available`, `endpoint`, `capabilities`), but `capabilities` is an open `List[dict]` of full capability objects rather than status records. Use this when a worker publishes its complete, authoritative capability set on every heartbeat. |
 | GET | `/relay/v2/discovery/nodes` | `rt_...` | List nodes known to the relay |
 | GET | `/relay/v2/discovery/query` | `rt_...` | Query the capability registry |
-| GET | `/relay/v2/discovery/capabilities` | `rt_...` | List all advertised capabilities |
+| GET | `/relay/v2/discovery/capabilities` | `rt_...` | List all advertised capabilities. The response `available` field is the aggregate over live providers; a capability disabled by all providers shows `available=false`. |
 | GET | `/relay/v2/discovery/capabilities/{name}` | `rt_...` | Detail for a single capability (includes `upload_modes` since T-164) |
 | GET | `/relay/v2/discovery/transfer-config` | `rt_...` | T-164: Datei-Übertragungs-Treppe — returns `{max_inline_bytes, max_artifact_bytes, max_payload_bytes}` so the node-cli can pick the transfer mode (inline / artifact / bridge) |
 
@@ -308,7 +308,7 @@ Body fields (all optional except the Bearer token):
 |---|---|---|
 | `load` | float 0–100 | Load as a percentage of `load_cap`. Drives the auto-busy logic (T-081). |
 | `queue_depth` | int ≥ 0 | Pending stages advertised by this node. |
-| `available` | bool | Capability-level availability flag. |
+| `available` | bool | Node-level availability flag — `false` means "alive but do not send tasks right now". Per-capability flags live in `capabilities[]`. |
 | `endpoint` | string | Node's reachable endpoint (optional). |
 | `capabilities` | array | Capability list (merge mode). Use `/worker-heartbeat` with `replace_capabilities=True` for full replace. |
 | `node_name` | string | Node-level name override (T-072). |

@@ -265,6 +265,13 @@ receives `claimed: false` instead of an error (T-189).
 scheduler actually sends more work. `online` + `available=false` means
 "alive but do not send tasks right now".
 
+A capability is available when at least one live provider is available:
+`any(nodes.available AND capability.available)` over all live providers.
+`available_only` filtering is based on that effective availability. A
+provider can disable a single capability by heartbeating it with
+`"available": false` — the capability drops out of the available catalog
+until re-enabled; sibling capabilities on the same node stay available.
+
 > **Scaling note:** The relay is designed for single-server, small-to-medium
 > clusters — tens of nodes and hundreds of tasks per minute. SQLite with WAL
 > handles this comfortably. For larger deployments (hundreds of nodes, very
