@@ -243,15 +243,23 @@ register → poll approval → heartbeat → claim → execute → complete
 
 Node status values:
 
-| Status | Category | Meaning | Set by |
-|---|---|---|---|
-| `pending` | PENDING | Registered, not yet approved | Relay on registration |
-| `approved` | AVAILABLE | Approved, no heartbeat yet | Relay on approval |
-| `online` | AVAILABLE | Sent at least one heartbeat | Relay on heartbeat |
-| `idle` | AVAILABLE | Online and explicitly available for claims | `node-cli node idle` / auto-revert from busy |
-| `busy` | BUSY | Online but not accepting new claims | `node-cli node busy` / auto-busy on sustained load |
-| `maintenance` | BUSY | Manually taken out of rotation | Operator (future) |
-| `offline` | OFFLINE | Missed too many heartbeats | Relay watchdog |
+| Status | Category | Meaning | Set by | Claims / reports |
+|---|---|---|---|---|
+| `pending` | PENDING | Registered, not yet approved | Relay on registration | no / no |
+| `approved` | AVAILABLE | Approved, no heartbeat yet | Relay on approval | yes / yes |
+| `online` | AVAILABLE | Sent at least one heartbeat | Relay on heartbeat | yes / yes |
+| `idle` | AVAILABLE | Online and explicitly available for claims | `node-cli node idle` / auto-revert from busy | yes / yes |
+| `busy` | BUSY | Online but not accepting new claims | `node-cli node busy` / auto-busy on sustained load | no / yes |
+| `maintenance` | BUSY | Manually taken out of rotation | Operator (future) | no / yes |
+| `offline` | OFFLINE | Missed too many heartbeats | Relay watchdog | no / no |
+
+*Claims* means accepting new work: `POST /scheduler/claim` and task
+submission (AVAILABLE nodes only). *Reports* means completing stages,
+sending notes, and using the artifact/storage routes — every live node
+(AVAILABLE or BUSY) can do this, so a busy node finishes its running
+work and keeps its long-run lease alive (T-154). The claim gate lives in
+the scheduler core (`node_can_claim`); a busy node asking for work
+receives `claimed: false` instead of an error (T-189).
 
 `available`, `load`, `queue_depth` in the heartbeat control whether the
 scheduler actually sends more work. `online` + `available=false` means
@@ -307,6 +315,17 @@ Task:     pending → accepted → running → completed/failed/timed_out/cancel
 Stage:    pending → claimed → completed/failed/timed_out
                   ↑↓           pending (released back)
 ```
+
+### Failure policy (linear)
+
+A stage that exhausts its retries (`failed`) fails its whole task,
+even while other stages are still pending (T-189). The task owner sees
+the `task_failed` event on the SSE stream and can decide to resubmit.
+Downstream stages of the failed stage stay `pending` until the owner
+cancels the task or deletes it — the relay never cascades a cancel.
+The same rule applies when a stage fails because no live node offers
+its capability (orphan sweep): a busy provider keeps pending stages
+alive; only a capability with no live provider at all fails them.
 
 ### Busy mode (manual + auto)
 

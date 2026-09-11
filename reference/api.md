@@ -54,6 +54,16 @@ For node-side usage see [../node/setup.md](../node/setup.md).
 | GET | `/relay/v2/scheduler/artifacts/{task_id}` | `rt_...` | List artifacts for a task |
 | DELETE | `/relay/v2/scheduler/artifacts/{artifact_id}` | `rt_...` | Remove an artifact association |
 
+Node-status gates (T-189): the reporting routes accept any live node —
+AVAILABLE or BUSY status (`approved`, `online`, `idle`, `busy`,
+`maintenance`): stage completion, notes, and the artifact routes above,
+plus every `/relay/v2/storage` route. A busy node can thus finish
+running work and keep its long-run lease alive. `POST /claim` also
+accepts busy nodes but answers `{"claimed": false}` — claim eligibility
+is an AVAILABLE-only core gate. Task submission (`POST /tasks`,
+`POST /task-simple`) and the read-only task routes keep requiring an
+approved/online node, so a `403` there can also mean the node is busy.
+
 ## Presence — `/relay/v2/presence`
 
 | Method | Path | Auth | Purpose |
