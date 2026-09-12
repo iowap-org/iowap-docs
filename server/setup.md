@@ -336,15 +336,15 @@ since T-110 (SQLAlchemy Core).
 | Default engine | SQLite 3 + WAL |
 | Default path | `~/.relay/server.db` |
 | Migrations | Automatic, additive, run on startup — no downtime, no manual steps |
-| Optional backends | PostgreSQL (implemented, T-110), MariaDB (stub) — see [database-backends.md](../reference/database-backends.md) |
+| Optional backends | PostgreSQL (implemented, T-110) — see [database-backends.md](../reference/database-backends.md) |
 
 The relay has a **pluggable database abstraction** — a `Database` interface
 with backend-specific implementations built on **SQLAlchemy Core**. The
 active backend is selected via a single config field (`db_type`). SQLite is
 the default and fully implemented; PostgreSQL is implemented and activated
-by installing the `[postgres]` extra and pointing `pg_dsn` at a server;
-MariaDB is a stub. See [database-backends.md](../reference/database-backends.md)
-for the full guide.
+by installing the `[postgres]` extra and pointing `pg_dsn` at a server.
+See [database-backends.md](../reference/database-backends.md) for the full
+guide.
 
 ### Backups
 
@@ -420,11 +420,6 @@ max_chunk_size: 10485760              # 10 MiB  — per chunked-upload chunk
 # Scheduler
 default_timeout_seconds: 300          # task metadata, stored at submit — NOT a kill timer
 max_retries: 2                        # 0–10 re-queues for an expired claim — dashboard-editable (T-181)
-
-# SSN (Server-Side Node) — T-069
-ssn_enabled: false               # set true to start/stop the SSN unit with the server
-ssn_auto_approve: true           # auto-approve the SSN's pending registration
-ssn_service_unit: "iowap-ssn.service"
 ```
 
 The same keys can be set as `RELAY_PORT`, `RELAY_ENABLE_MDNS`,
@@ -510,35 +505,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable iowap.service
 sudo systemctl start iowap.service
 ```
-
-### Server-Side Node (SSN)
-
-The repo ships a systemd user unit for the SSN at
-`systemd/iowap-ssn.service`. To enable the SSN:
-
-1. Install the unit into your user systemd directory:
-
-   ```bash
-   cp systemd/iowap-ssn.service ~/.config/systemd/user/
-   systemctl --user daemon-reload
-   ```
-
-2. Enable SSN in the server config (`~/.relay/config.yaml`):
-
-   ```yaml
-   ssn_enabled: true
-   ssn_auto_approve: true
-   ssn_service_unit: "iowap-ssn.service"
-   ```
-
-3. The relay server starts/stops the SSN unit in its `lifespan()` hook.
-   With `ssn_auto_approve: true` the maintenance loop approves the SSN's
-   pending registration automatically so it comes online without a
-   manual admin action.
-
-4. The SSN needs a capabilities profile that advertises
-   `ssn.capability-pages` (see [node/ssn.md](../node/ssn.md) for the
-   YAML example and the handler path).
 
 ## 14. Updating
 

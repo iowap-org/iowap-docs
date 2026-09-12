@@ -194,14 +194,13 @@ status: busy
 The schema allows additional top-level keys (`additionalProperties: true`),
 so forward-compatible fields do not break validation.
 
-### Capability dashboard pages (SSN)
+### Capability dashboard pages
 
-A capability can have its own HTML dashboard page. Since T-069 these pages
-are **hosted by a Server-Side Node (SSN)** that advertises the
-`ssn.capability-pages` capability — the relay no longer stores or serves
-capability pages itself. Workers manage their pages by sending tasks to
-`ssn.capability-pages` (`add`/`update`/`delete`/`list`). See
-[ssn.md](ssn.md) for the full flow, payload formats and deployment.
+The relay does not store, serve, or list capability dashboard pages. The
+SSN-based page rendering (`ssn.capability-pages` plus the
+`/relay/v2/dashboard/api/ssn-pages` endpoint) was removed in T-184. A
+capability page declared by a node is reached through its **Dynamic Node
+Routes** (T-075, below).
 
 ### Dynamic Node Routes (T-075)
 

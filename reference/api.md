@@ -119,21 +119,14 @@ Implementation: `api/v2/cluster.py` (mounted with prefix `/cluster` under
 `/relay/v2`). The same views power the dashboard's community page; fields are
 trimmed server-side to the public row shapes (`_public_node_row` et al.).
 
-## Capability dashboard pages — SSN (`ssn.capability-pages`)
+## Capability dashboard pages
 
-Capability dashboard pages are **no longer served by the relay itself**.
-They are hosted by a Server-Side Node (SSN) that heartbeats the
-`ssn.capability-pages` capability. The relay lists the available pages via
-a task to the SSN and the dashboard embeds them in an iframe.
-
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| GET | `/relay/v2/dashboard/api/ssn-pages` | session | List capabilities that have a dashboard page on the SSN |
-
-Each entry includes `name` (capability name), `node_id` (SSN node) and
-`url` (Dynamic Route URL to open in the iframe). The response also carries
-`online` (whether an SSN heartbeating `ssn.capability-pages` is up). See
-`docs/node/ssn.md` for the SSN proxy + page-hosting flow.
+The relay **does not serve or list capability dashboard pages**. The
+SSN-based page-rendering path — including the
+`GET /relay/v2/dashboard/api/ssn-pages` endpoint — was removed (T-184,
+Spec S-10.3). A capability page declared by a node is reached through its
+**Dynamic Node Routes** (T-075); see
+[node/capabilities.md](../node/capabilities.md).
 
 ## Dashboard — `/relay/v2/dashboard`
 
@@ -505,12 +498,9 @@ For files larger than 100 MiB use the **chunked** upload flow:
 
 #### Capability dashboard pages
 
-Capability dashboard pages are **not** uploaded via the storage endpoint
-anymore. They are hosted by a Server-Side Node (SSN) that heartbeats the
-`ssn.capability-pages` capability. The relay lists the available pages via
-`GET /relay/v2/dashboard/api/ssn-pages` (session auth) and the dashboard
-embeds each page in an iframe via its Dynamic Route URL. See
-`docs/node/ssn.md` for the full flow.
+Capability pages are not uploaded via the storage endpoint, and the relay
+neither serves nor lists them (SSN page rendering removed in T-184). Pages
+declared by nodes are reached through **Dynamic Node Routes** (T-075).
 
 ### Download an artifact
 
