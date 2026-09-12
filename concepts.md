@@ -443,9 +443,13 @@ without external dependencies (no Prometheus server, no Grafana):
   it without any code change.
 - **`/ready`** (root, no auth) — readiness check. Probes the database
   (`SELECT 1`), the maintenance loop age (`maintenance_age_seconds`,
-  freshly stamped by `_maintenance_loop`) and the event bus. Returns
+  freshly stamped by `_maintenance_loop`), the event bus and the
+  outcome of the last maintenance sweep (`maintenance_last_ok`,
+  `true` when no sweep has run yet). Returns
   `{"status": "ready"|"degraded", "database", "scheduler", "event_bus",
-  "maintenance_age_seconds"}`.
+  "maintenance_age_seconds", "maintenance_last_ok"}`. A sweep with any
+  errored task result flips `maintenance_last_ok` to `false` and degrades
+  the readiness status.
 - **Built-in metrics dashboard** at `/relay/v2/dashboard/metrics`
   (session auth) — renders the same data as cards and minimal bar
   charts. JSON backing API: `/relay/v2/dashboard/api/metrics`.
