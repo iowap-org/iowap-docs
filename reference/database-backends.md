@@ -93,7 +93,13 @@ per backend. T-110 decoupled the dialect:
 - **`row["col"]` access** keeps working because a small compatibility shim
   on SQLAlchemy's `Row` forwards string subscripts to `row._mapping[col]`.
   The 373+ legacy `row["col"]` sites needed no change.
-- **Migrations** are backend-aware: `PRAGMA table_info` on SQLite,
+- **Migrations** are versioned: `MIGRATIONS` in `core/db.py` is the ordered
+  history of `(version, name, apply_fn)` steps, recorded in the
+  `schema_version` table where `MAX(version)` is the stand of that database.
+  A database without a ledger row replays the whole history — the bodies are
+  idempotent — and is stamped with the latest version. A database whose
+  version is ahead of the running code is left untouched.
+- **Migration bodies are backend-aware**: `PRAGMA table_info` on SQLite,
   `information_schema.columns` on PostgreSQL, centralised in
   `_column_names()` / `_table_names()`.
 - **Timestamps** stay ISO-8601 **TEXT** strings (as on the existing
