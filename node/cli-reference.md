@@ -1062,7 +1062,7 @@ node-cli route register --path <path> --method <METHOD> \
 |---|---|---|
 | `--path` | yes | Route path (must start with `/upload/` or `/download/`) |
 | `--method` | yes | HTTP method (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`) |
-| `--upstream` | yes | Upstream URL the relay proxies to |
+| `--upstream` | yes | Route target: a path (`/upload/…`, resolved against this node's `endpoint`) or an absolute URL matching the node's own endpoint origin |
 | `--ttl` | yes | Time-to-live in seconds (capped by `temp_route_max_ttl_seconds`) |
 | `--channel` | yes | `channel_id` tying this route to a session |
 | `--description` | no | Optional human-readable note |
@@ -1094,9 +1094,12 @@ node's own routes; it cannot list another node's routes.
 ### Examples
 
 ```bash
-# Open a 1-hour upload channel.
+# Open a 1-hour upload channel. A relative upstream is resolved against this
+# node's own registered endpoint; loopback/link-local/metadata targets are
+# refused. An absolute URL is only accepted when it matches that same origin
+# (or a host allow-listed via RELAY_ROUTE_TARGET_ALLOW_HOSTS).
 node-cli route register --path /upload/abc --method POST \
-    --upstream http://storage-node:8791/upload/abc \
+    --upstream /upload/abc \
     --ttl 3600 --channel ch_abc --description "session upload"
 
 # Revoke it.

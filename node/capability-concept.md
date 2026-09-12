@@ -78,8 +78,21 @@ capabilities:
       - path: /api/task-submit
         method: POST
         auth: session
-        upstream: http://127.0.0.1:8790/api/task-submit
+        upstream: /api/task-submit
 ```
+
+A route's `upstream` is either a **path** (recommended) or an absolute URL:
+
+- **Path** — the relay resolves it against the node's own registered
+  `endpoint` (`<node-endpoint-origin><path>`). The proxied host comes from the
+  node's registration, never from the route declaration.
+- **Absolute URL** — accepted only when it points at the node's own endpoint
+  origin, or at a host listed in the server's
+  `RELAY_ROUTE_TARGET_ALLOW_HOSTS` setting.
+
+Loopback, link-local and cloud-metadata targets are always refused (fail-closed,
+HTTP 502), and a node's declared `endpoint` is validated the same way — so the
+relay can never be used as an open proxy into the network it runs in.
 
 ### 5. It can be non-claimable
 
