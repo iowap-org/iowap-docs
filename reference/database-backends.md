@@ -10,8 +10,8 @@ The relay server stores all of its state — nodes, tasks, stages, tokens,
 RBAC, audit logs — in a relational database. Since T-110 the database
 layer is built on **SQLAlchemy Core** (not an ORM): every query goes
 through a database-independent SQLAlchemy expression, so the same code
-runs unchanged on SQLite, PostgreSQL, and (with a driver) MariaDB. The
-active backend is selected with a single config line.
+runs unchanged on SQLite and PostgreSQL. The active backend is selected
+with a single config line.
 
 ```
 ┌──────────────┐     get_conn() / init_db()     ┌──────────────┐
@@ -19,13 +19,13 @@ active backend is selected with a single config line.
 │  (auth,       │                                │  (Interface) │
 │   scheduler,  │                                └──────┬───────┘
 │   api, ...)   │                                       │
-└──────────────┘                              ┌──────────┼──────────┐
-                                               ▼          ▼          ▼
-                                         ┌─────────┐ ┌─────────┐ ┌─────────┐
-                                         │ SQLite  │ │Postgres │ │ MariaDB │
-                                         │  (SA    │ │  (SA    │ │  (SA    │
-                                         │  engine)│ │  engine)│ │  engine)│
-                                         └─────────┘ └─────────┘ └─────────┘
+└──────────────┘                              ┌──────────┴──────────┐
+                                               ▼                    ▼
+                                         ┌─────────┐        ┌─────────┐
+                                         │ SQLite  │        │Postgres │
+                                         │  (SA    │        │  (SA    │
+                                         │  engine)│        │  engine)│
+                                         └─────────┘        └─────────┘
 ```
 
 Business logic (auth, scheduler, API, dashboard) never touches the
@@ -38,7 +38,6 @@ SQLAlchemy `Connection`.
 |---------|-------------|----------------|--------|
 | SQLite | `sqlite` | `sqlite3` (stdlib) | ✅ Default, fully implemented |
 | PostgreSQL | `postgres` | `psycopg` (`pip install .[postgres]`) | ✅ Implemented (T-110) |
-| MariaDB / MySQL | `mariadb` | `pymysql` | 🚧 Stub — implementation deferred |
 
 ## Selecting a backend
 
@@ -88,7 +87,7 @@ per backend. T-110 decoupled the dialect:
 - **Queries** use the `q(sql, params)` helper in `core/db.py`, which
   rewrites `?`-positional SQL into named bind parameters and lets
   SQLAlchemy render the correct placeholder per dialect (`?` on SQLite,
-  `$N` on PostgreSQL, `%s` on MySQL). The legacy call shape
+  `$N` on PostgreSQL). The legacy call shape
   (`conn.execute(q("... WHERE id = ?", (id,)))`) is preserved, so the
   155 call sites changed minimally.
 - **`row["col"]` access** keeps working because a small compatibility shim
