@@ -1323,12 +1323,24 @@ With `--json` the raw comparison payload is printed:
 Exit codes: `0` on a successful lookup (regardless of `update_available`),
 `1` when the release lookup failed (`error` set).
 
-### `node-cli update apply [--service-unit <unit>]`
+### `node-cli update apply [--service-unit <unit>] [--restart-command <cmd>]`
 
 Downloads the newest wheel asset to `~/.relay/wheels/`, reinstalls it with
 `pip install --force-reinstall --no-deps` into the running venv, then
-restarts the systemd user unit (default: `iowap-node-daemon.service`,
-overridable via `--service-unit` or the `RELAY_SERVICE_UNIT` env var).
+restarts the service. Default restart: `systemctl --user restart <unit>`
+(`--service-unit` / `RELAY_SERVICE_UNIT` override the unit name).
+
+On hosts without systemd (macOS/launchd, manual setups) pass a custom
+restart command — `--restart-command` flag or the `RELAY_RESTART_COMMAND`
+env var. The value is split with shell rules, `{unit}` is replaced with
+the service name, `~` is expanded:
+
+```bash
+node-cli update apply \
+  --restart-command '/usr/bin/launchctl kickstart -k gui/501/{unit}'
+```
+
+Priority: `--restart-command` flag > `RELAY_RESTART_COMMAND` env > systemd.
 
 With `--json`:
 
@@ -1350,12 +1362,13 @@ pip install failed, service restart failed. Exit `1` on any of them.
 | Field | Description |
 |-------|-------------|
 | `before_version` / `after_version` | Installed version before and after the update. |
-| `restarted` | `true` when the systemctl restart succeeded. |
+| `restarted` | `true` when the service restart (systemd or `--restart-command`) succeeded. |
 | `wheel_path` | Local path of the downloaded wheel (set once the download succeeded). |
 
 Environment: `RELAY_UPDATE_REPO` overrides the GitHub repo (default
 `iowap-org/iowap-node`); `GITHUB_TOKEN` / `GH_TOKEN` are sent as bearer
-token for the release API when set.
+token for the release API when set; `RELAY_RESTART_COMMAND` replaces the
+systemd restart (see above).
 
 ---
 
