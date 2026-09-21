@@ -1281,6 +1281,84 @@ node-cli file get bk_abc123 --cap backup.restore -o ./restore.tar.gz
 
 ---
 
+## update
+
+Wheel-based self-update for deployed nodes. The git-based update path
+(`git fetch` + pull + restart) was removed — wheel-deployed nodes have no
+git checkout, and a pull would never touch the package running from
+site-packages. The source of truth is the newest `wheel-vX.Y.Z` release on
+GitHub (`iowap-org/iowap-node`); the locally installed distribution version
+(`importlib.metadata.version("iowap-node")`) is compared against it.
+
+### `node-cli update check`
+
+```console
+$ node-cli update check
+Local version:  2.3.6
+Latest release: 2.3.8 (wheel-v2.3.8)
+Status:         update available
+```
+
+With `--json` the raw comparison payload is printed:
+
+```json
+{
+  "latest_version": "2.3.8",
+  "tag": "wheel-v2.3.8",
+  "asset_name": "iowap_node-2.3.8-py3-none-any.whl",
+  "asset_url": "https://github.com/iowap-org/iowap-node/releases/download/wheel-v2.3.8/iowap_node-2.3.8-py3-none-any.whl",
+  "error": null,
+  "local_version": "2.3.6",
+  "update_available": true
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `local_version` | Installed `iowap-node` version, `null` when not installed. |
+| `latest_version` / `tag` / `asset_name` / `asset_url` | Newest matching `wheel-vX.Y.Z` release and its wheel asset. |
+| `error` | Human-readable failure reason (network, or no wheel release found). |
+| `update_available` | `true` only when both versions parse and the release is strictly newer. |
+
+Exit codes: `0` on a successful lookup (regardless of `update_available`),
+`1` when the release lookup failed (`error` set).
+
+### `node-cli update apply [--service-unit <unit>]`
+
+Downloads the newest wheel asset to `~/.relay/wheels/`, reinstalls it with
+`pip install --force-reinstall --no-deps` into the running venv, then
+restarts the systemd user unit (default: `iowap-node-daemon.service`,
+overridable via `--service-unit` or the `RELAY_SERVICE_UNIT` env var).
+
+With `--json`:
+
+```json
+{
+  "success": true,
+  "message": "updated 2.3.6 -> 2.3.8; service restarted",
+  "before_version": "2.3.6",
+  "after_version": "2.3.8",
+  "restarted": true,
+  "wheel_path": "/home/felix/.relay/wheels/iowap_node-2.3.8-py3-none-any.whl"
+}
+```
+
+Failure modes (each returns `success: false` + `message`, never raises):
+already up to date, release lookup failed, wheel download failed,
+pip install failed, service restart failed. Exit `1` on any of them.
+
+| Field | Description |
+|-------|-------------|
+| `before_version` / `after_version` | Installed version before and after the update. |
+| `restarted` | `true` when the systemctl restart succeeded. |
+| `wheel_path` | Local path of the downloaded wheel (set once the download succeeded). |
+
+Environment: `RELAY_UPDATE_REPO` overrides the GitHub repo (default
+`iowap-org/iowap-node`); `GITHUB_TOKEN` / `GH_TOKEN` are sent as bearer
+token for the release API when set.
+
+---
+
 ## hp
 
 Handler primitives for handler scripts (T-179). Scripts call `node-cli`
