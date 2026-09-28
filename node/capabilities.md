@@ -370,18 +370,34 @@ Daemon picks up change at next heartbeat (mtime check) or via SIGHUP
 
 A handler is an external subprocess. Environment variables `RELAY_STAGE_ID`,
 `RELAY_TASK_ID`, `RELAY_CAPABILITY`, `RELAY_NODE_ID`, `RELAY_BASE_URL`,
-`RELAY_TOKEN_FILE` are set. **Stdin** receives the stage payload as JSON;
-**stdout** must be valid JSON (the result dict). The daemon captures
-**stderr** and writes it to the daemon log for debugging — it is never sent
-to the relay as the result.
+`RELAY_TOKEN_FILE` are set. **Stdin** receives the Request Envelope as JSON
+(`{"task_id", "capability", "input"}`); **stdout** must be valid JSON — the
+Response Envelope (`{"status", "result", "error"}`); bare result dicts are
+still accepted during the rollout and normalized by the daemon. The
+normative reference for both envelopes, the status semantics and the full
+rollout-tolerance table is [handler-contract.md](handler-contract.md). The
+daemon captures **stderr** and writes it to the daemon log for debugging —
+it is never sent to the relay as the result.
 
 | Outcome | What the daemon does | Result stored on the stage |
 |---|---|---|
-| Exit `0`, stdout is valid JSON | Complete the stage | The parsed stdout dict |
+| Exit `0`, stdout is a **conforming envelope** | Complete the stage | The parsed stdout dict (passed through **verbatim** — never rewritten) |
+| Exit `0`, stdout is valid JSON | Complete the stage | The parsed stdout dict, normalized by the daemon (bare result dicts are wrapped into the response envelope) |
+| Exit `0`, stdout is valid JSON in an **invalid envelope shape** | Fail the stage (counted against `max_retries`) | `{"error": "handler envelope ..."}` — e.g. completed without a `result` object, or an invalid `status` value |
 | Exit `0`, stdout is **not** valid JSON | Fail the stage (counted against `max_retries`) | `{"error": "handler stdout is not valid JSON: ..."}` |
 | Exit non-zero (any code `N`) | Fail the stage (counted against `max_retries`) | `{"error": "handler exited with code N", "stderr": ...}` |
 | Timeout exceeded | `SIGTERM` then `SIGKILL` after a short grace | `{"error": "handler timeout after Ns"}` |
 | `SIGKILL` / host shutdown while claimed | The stage stays `claimed` until `claim_ttl_seconds` (default 60 s, dashboard-editable 60–300 s — applies without restart, T-181) elapses, then the scheduler releases it back to `pending` for another node to claim | — |
+
+The first row is the envelope contract (see
+[handler-contract.md](handler-contract.md) for the normative reference and
+the full rollout-tolerance table): **stdin** carries the Request Envelope
+`{"task_id", "capability", "input"}` and **stdout** carries the Response
+Envelope `{"status": "completed"|"error", "result", "error"}`. During the
+2026-09-28 rollout the daemon normalizes tolerantly — bare result dicts
+and legacy error-keyed dicts are still accepted and handled per the table
+above (a bare dict with an `error` key fails the stage; a bare result dict
+is wrapped exactly as if the handler had emitted the envelope).
 
 Key points:
 
@@ -393,6 +409,11 @@ Key points:
   payload is a contract violation: the daemon treats exit `0` as
   success, completes the stage with the (broken) result, and the
   scheduler will not retry it — the failed work is silently lost.
+  (Exception: a bare `{"error": ...}` dict fails the stage and burns the
+  retry budget — see the outcome table above. The safest failure signal
+  for a new handler is the Response Envelope's
+  `{"status": "error", "error": "..."}` or a non-zero exit; see
+  [handler-contract.md](handler-contract.md).)
 - **exit `0` requires valid JSON on stdout.** Handlers may only write a
   valid JSON result object to stdout when they exit `0`. Any other
   output (empty, prose, error text) is a contract violation and is

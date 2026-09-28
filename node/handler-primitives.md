@@ -5,6 +5,17 @@
 > daemon completes the stage) stays unchanged. See
 > [capabilities.md](capabilities.md#handler-contract) for the default.
 
+> **Two kinds of "envelope" — don't confuse them.** The **transfer
+> envelope** documented on this page is the opt-in `__iowap_ref__` JSON
+> object that `hp put` prints and `hp get` consumes to move *files* into
+> and out of tasks. It has nothing to do with the **handler result
+> envelope** (`{"status", "result", "error"}`), which is the standardized
+> request/response wrapper of the default handler contract on every
+> invocation — see [handler-contract.md](handler-contract.md) for its
+> normative reference. A handler can use both independently: emit the
+> result envelope on stdout and, inside its `result`, carry an
+> `__iowap_ref__` envelope produced by `hp put`.
+
 ## Overview
 
 Handler scripts get generic primitives from `node-cli` instead of building

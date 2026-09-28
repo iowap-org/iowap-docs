@@ -21,6 +21,7 @@
 │   ├── node-config.md       #   node.yaml configuration
 │   ├── node-daemon.md       #   Daemon operation & service management
 │   ├── capabilities.md      #   Capability definition reference
+│   ├── handler-contract.md  #   Handler envelope contract (normative I/O reference)
 │   ├── capability-concept.md#   Capability matching model
 │   ├── concept.md           #   Node architecture deep-dive
 │   ├── ssn.md               #   SSN proxy & capability pages

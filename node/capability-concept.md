@@ -287,10 +287,21 @@ node-cli task submit --capability chat.ai \
 | **AI** (`type: ai`) | Calls a local or remote LLM | `chat.ai` — calls Ollama |
 
 The default handler contract is always the same:
-1. Task payload arrives on **stdin** as JSON
+1. The Request Envelope arrives on **stdin** as JSON
+   (`{"task_id": ..., "capability": ..., "input": {...}}` — the
+   capability-specific payload fields live inside `input`; during the
+   rollout they are also mirrored at the top level so older handlers that
+   read flat keys keep working)
 2. Handler processes it (runs a command, calls an API, invokes an LLM)
-3. Handler writes the result to **stdout** as JSON
-4. Node reads stdout and completes the stage
+3. Handler writes the result to **stdout** as JSON — ideally the Response
+   Envelope `{"status": "completed", "result": {...}, "error": null}`
+4. Node reads stdout, normalizes it (bare result dicts are wrapped into
+   the envelope; see [handler-contract.md](handler-contract.md)) and
+   completes the stage
+
+The full normative reference — both envelope shapes, status semantics,
+in-band vs exit-code failure paths, and the rollout tolerance table — is
+[handler-contract.md](handler-contract.md).
 
 ### Opt-in extensions (complete-by-script, file transfer)
 
@@ -326,6 +337,7 @@ capabilities:
 ## See also
 
 - **[capabilities.md](capabilities.md)** — detailed reference: naming & suffixes, `chat.ai` vs `agent.ai`, `node.yaml` format, Dynamic Routes, handler contract, validation rules, metadata forwarding
+- **[handler-contract.md](handler-contract.md)** — normative reference for the handler Request/Response envelopes (I/O format, status semantics, rollout tolerance)
 - **[handler-primitives.md](handler-primitives.md)** — full reference for the opt-in handler primitives: `hp put/get` envelopes, env-defaults for complete/note, `complete_by_script`
 - **[node-config.md](node-config.md)** — `node.yaml` reference with all fields
 - **[ssn.md](ssn.md)** — SSN capability pages and proxy
