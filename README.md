@@ -49,4 +49,4 @@ This repo contains all documentation for the [IOWAP](https://github.com/iowap-or
 
 ## License
 
-AGPL-3.0
+MIT — see [LICENSE](LICENSE).
