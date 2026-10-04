@@ -54,7 +54,10 @@ registration — both are covered by `relay set`; see
 # Pin once (recommended for fixed installations): discovery stays off.
 node-cli relay set --server-url http://192.168.2.10:8788
 
-# Or unpin: the node then discovers the relay over mDNS on every fallback.
+# Or unpin — removes every persisted base_url (relay_config.json AND the
+# iowap-agent.json state pin, complete since 2.3.17; earlier wheels left
+# the state pin from `node register` in place) — the node then discovers
+# the relay over mDNS on every fallback.
 node-cli relay set --discover      # requires the relay to advertise (see below)
 ```
 
@@ -70,6 +73,7 @@ Verify without touching the config first:
 ```bash
 node-cli relay discover --timeout 5
 # -> http://192.168.2.10:8788
+#    service: IOWAP Relay Service (_http._tcp)   (second line only without --name)
 ```
 
 ## 2. Register the node

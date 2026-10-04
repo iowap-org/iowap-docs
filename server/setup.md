@@ -386,6 +386,7 @@ port: 8788
 log_level: "info"            # debug | info | warning | error
 enable_mdns: true
 mdns_hostname: "iowap"
+mdns_service_name: "IOWAP Relay Service"   # name nodes filter mDNS discovery on
 
 # TLS (T-111) — set cert+key to serve HTTPS (Internet mode). Leave unset for
 # plain HTTP over Tailscale/WireGuard (Homelab mode).

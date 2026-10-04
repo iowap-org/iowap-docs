@@ -128,7 +128,8 @@ conversion point on every node. During the migration the daemon accepts
 everything in this table; nothing here requires fleet-lockstep:
 
 > **CLI consumers of `stages[].result` must unwrap one envelope layer**
-> (T-166, fixed in 2.3.16). Because conforming handlers pass through
+> (T-166 follow-up fix, deployed in 2.3.16; the T-166 deliverable itself is
+> the ephemeral bridge — see handler-primitives.md). Because conforming handlers pass through
 > **verbatim**, `stages[].result` is the Response Envelope itself, not the
 > inner result. Unwrapping helper: `nodes.common.cli.cli_bridge._find_result`
 > — a dict is an envelope iff it carries `_handler` and/or the
@@ -169,7 +170,7 @@ Two edge cases worth knowing:
 
 ## Relation to flows and the server
 
-- The relay server stays a **dumb pass-through**: it stores `stage.result`
+- The relay server stays a **pure pass-through**: it stores `stage.result`
   verbatim and never parses, validates, or wraps envelope content.
 - iowap-flow unwraps a completed envelope **exactly once** when joining
   stage results into the flow aggregate, so `${ref.result.path}` templates

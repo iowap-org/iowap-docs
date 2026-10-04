@@ -1125,7 +1125,7 @@ node-cli --json route list
 the node find the relay via mDNS.
 
 ```bash
-node-cli relay set --server-url http://192.168.2.60:8788   # pin (discovery off)
+node-cli relay set --server-url http://192.168.2.10:8788   # pin (discovery off)
 node-cli relay set --discover                              # unpin (discovery on)
 node-cli relay discover [--name "IOWAP Relay Service"] [--timeout 5]
 ```
@@ -1134,7 +1134,7 @@ node-cli relay discover [--name "IOWAP Relay Service"] [--timeout 5]
 
 | Action | Description |
 |---|---|
-| `set` | Persist `base_url` in `relay_config.json`. With `--discover`, removes the pin and re-enables mDNS discovery. |
+| `set` | Persist `base_url` in `relay_config.json`. With `--discover`, removes every pin — in `relay_config.json` and in the node state file `iowap-agent.json` (where `node register` persists it) — and re-enables mDNS discovery. Complete since 2.3.17: earlier wheels only unpinned `relay_config.json`, so a registered node's state-file pin silently kept discovery off. |
 | `discover` | Targeted mDNS lookup — resolves the configured service name and prints `http://<addr>:<port>`, or exits 1 when nothing matching is broadcast. |
 
 ### mDNS service-name filter
@@ -1150,7 +1150,7 @@ web UI advertising `_http._tcp`) is never returned as the relay.
 The relay server must advertise for discovery to ever match: set
 `enable_mdns: true` (+ `mdns_service_name`) in the **server's**
 `~/.relay/config.yaml` — see
-[../server/setup.md §11 Configuration reference](../server/setup.md).
+[../server/setup.md §11 Configuration reference](../server/setup.md#11-configuration-reference).
 Disabling discovery (pinned `base_url`) is the recommended default for
 fixed-installation nodes.
 
@@ -1160,6 +1160,7 @@ fixed-installation nodes.
 |---|---|
 | 0 | URL pinned / pin removed, or relay discovered |
 | 1 | Discovery found no matching service, or HTTP / network error |
+| 2 | Usage error: `--server-url` and `--discover` given together, or neither given |
 
 ---
 
@@ -1565,7 +1566,7 @@ All paths are relative to `~/.relay/` unless noted.
 > `RELAY_TOKEN_TTL_HOURS`, `RELAY_SESSION_COOKIE_SECURE`, etc. These belong
 > in the relay's `~/.relay/config.yaml` or its systemd unit, not the node's.
 > The full server config is documented in
-> [../server/setup.md §11 Configuration reference](../server/setup.md).
+> [../server/setup.md §11 Configuration reference](../server/setup.md#11-configuration-reference).
 
 ### Handler environment variables
 
