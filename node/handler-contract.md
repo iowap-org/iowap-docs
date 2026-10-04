@@ -127,6 +127,16 @@ hint discovery.
 conversion point on every node. During the migration the daemon accepts
 everything in this table; nothing here requires fleet-lockstep:
 
+> **CLI consumers of `stages[].result` must unwrap one envelope layer**
+> (T-166, fixed in 2.3.16). Because conforming handlers pass through
+> **verbatim**, `stages[].result` is the Response Envelope itself, not the
+> inner result. Unwrapping helper: `nodes.common.cli.cli_bridge._find_result`
+> — a dict is an envelope iff it carries `_handler` and/or the
+> `{status, result, error}` key set; envelope with `status: "error"` or a
+> set `error` yields nothing (failed work); legacy flat results pass
+> through unchanged. See
+> `tests/test_t166_find_result_envelope.py` for the contract.
+
 | Handler stdout (exit `0`) | What the daemon does |
 |---|---|
 | Conforming envelope (`status` present and valid) | Passes through **verbatim** — already-conforming handlers are never rewritten |

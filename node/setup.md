@@ -43,6 +43,35 @@ reads docs from the relay at runtime (`node-cli docs`), not locally.
 > python -m nodes.common.node_daemon            # = node-daemon
 > ```
 
+### Alternative: let the node discover the relay (mDNS, since 2.3.16)
+
+Instead of naming a fixed relay URL everywhere (installer, unit files,
+scripts), the node can resolve it at runtime. Two options after
+registration — both are covered by `relay set`; see
+[cli-reference.md §relay](cli-reference.md#relay):
+
+```bash
+# Pin once (recommended for fixed installations): discovery stays off.
+node-cli relay set --server-url http://192.168.2.10:8788
+
+# Or unpin: the node then discovers the relay over mDNS on every fallback.
+node-cli relay set --discover      # requires the relay to advertise (see below)
+```
+
+Discovery is **name-filtered**: the node matches only an mDNS service called
+`IOWAP Relay Service` (customisable via `mdns_service_name` in
+`~/.relay/relay_config.json` or env `RELAY_MDNS_SERVICE_NAME`) and ignores
+other `_http._tcp` broadcasts on the LAN. It can only ever succeed when the
+**relay server** advertises itself — enable `enable_mdns: true` (+ the
+matching `mdns_service_name`) in the server's `~/.relay/config.yaml`, see
+[../server/setup.md §11 Configuration reference](../server/setup.md#11-configuration-reference).
+Verify without touching the config first:
+
+```bash
+node-cli relay discover --timeout 5
+# -> http://192.168.2.10:8788
+```
+
 ## 2. Register the node
 
 `node register` (T-178) is a first-class command: it runs without existing

@@ -53,6 +53,7 @@ capabilities validate/publish/diff). Pure-local subcommands
 | [`artifact`](#artifact) | Artifact upload / download |
 | [`docs`](#docs) | Read relay documentation from the server |
 | [`route`](#route) | Manage temporary bridge routes (register / unregister / list) |
+| [`relay set` / `relay discover`](#relay) | Pin the relay base_url, or discover it via mDNS by service name (2.3.16) |
 | [`hp put`](#hp-put) | Handler primitive: local file → transfer envelope (stdout) |
 | [`hp get`](#hp-get) | Handler primitive: transfer envelope → local file |
 
@@ -1118,6 +1119,50 @@ node-cli --json route list
 
 ---
 
+## relay
+
+**Since 2.3.16 (T-187):** pin the relay base_url, or remove the pin and let
+the node find the relay via mDNS.
+
+```bash
+node-cli relay set --server-url http://192.168.2.60:8788   # pin (discovery off)
+node-cli relay set --discover                              # unpin (discovery on)
+node-cli relay discover [--name "IOWAP Relay Service"] [--timeout 5]
+```
+
+### Actions
+
+| Action | Description |
+|---|---|
+| `set` | Persist `base_url` in `relay_config.json`. With `--discover`, removes the pin and re-enables mDNS discovery. |
+| `discover` | Targeted mDNS lookup — resolves the configured service name and prints `http://<addr>:<port>`, or exits 1 when nothing matching is broadcast. |
+
+### mDNS service-name filter
+
+`relay discover` performs a **targeted** lookup, not a first-best sweep: it
+matches `_http._tcp` instances whose name equals the configured service name
+(env `RELAY_MDNS_SERVICE_NAME`, then `mdns_service_name` from
+`relay_config.json`, then the default `"IOWAP Relay Service"`) and ignores
+everything else. Avahi-style escaped spaces (`\032`) are unescaped before
+comparing, and a foreign instance with the same service type (e.g. a NAS
+web UI advertising `_http._tcp`) is never returned as the relay.
+
+The relay server must advertise for discovery to ever match: set
+`enable_mdns: true` (+ `mdns_service_name`) in the **server's**
+`~/.relay/config.yaml` — see
+[../server/setup.md §11 Configuration reference](../server/setup.md).
+Disabling discovery (pinned `base_url`) is the recommended default for
+fixed-installation nodes.
+
+### Exit codes
+
+| Code | Condition |
+|---|---|
+| 0 | URL pinned / pin removed, or relay discovered |
+| 1 | Discovery found no matching service, or HTTP / network error |
+
+---
+
 ## bridge
 
 Stream large files directly between the caller and a storage node over a
@@ -1502,6 +1547,7 @@ All paths are relative to `~/.relay/` unless noted.
 | `RELAY_CLAIM_INTERVAL` | daemon | Override `claim_interval` (integer seconds) |
 | `RELAY_LOG_LEVEL` | all commands | Default log level when `--log-level` is not passed |
 | `RELAY_PROFILES_DIR` | capabilities | Override the `profiles.d/` directory |
+| `RELAY_MDNS_SERVICE_NAME` | `relay discover` / discovery fallback | Expected mDNS service name (overrides `mdns_service_name` from `relay_config.json`; default `IOWAP Relay Service`) |
 
 > **Token is read from a file, not an env var.** The CLI loads the runtime
 > token from `~/.relay/iowap-agent.token` only. A `RELAY_RUNTIME_TOKEN`
