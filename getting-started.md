@@ -69,6 +69,14 @@ hosts or containers.
   feature catalogue (22 categories, ~150 features, each with a file/line
   reference to its implementation).
 
+## 6. I want to drive the fleet from my AI agent's desktop app
+
+You run the Hermes desktop app and want the fleet visible and steerable
+there — fleet overview, task submission and tracking, no dashboard detour.
+
+→ **[node/hermes-integration.md](node/hermes-integration.md)** — install the
+  plugin (desktop half + backend half), use chip/pane/pages, troubleshoot.
+
 ## Quick decision tree
 
 ```
@@ -83,6 +91,8 @@ What do you want to do?
 ├─ Use the HTTP API / write a client        → reference/api.md
 │
 ├─ Browse every feature / find an implementation  → reference/design-board.md
+│
+├─ Drive the fleet from the Hermes desktop app  → node/hermes-integration.md
 │
 └─ Understand the architecture              → node/concept.md, node/capability-concept.md, concepts.md
 ```
