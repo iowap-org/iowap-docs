@@ -486,6 +486,34 @@ filtered with `grep "<trace_id>"` in the journal.
   networks.
 - **Expired tokens are purged hourly by a background watchdog.**
 
+## Positioning
+
+IOWAP sits in a busy ecosystem. It is none of the things below — the closest
+neighbors, and the deliberate differences:
+
+- **A2A (Agent2Agent)** — a standard for agent↔agent communication (agent
+  cards, task delegation). IOWAP routes *between machines* using capability
+  claims; agents are one client type among several. A2A could ride on IOWAP
+  as a capability adapter node — not the other way round.
+- **MCP / MCP gateways** (e.g. gateway registries) — centralized tool and
+  MCP-server distribution for agent processes. IOWAP operates *below* that
+  layer: independent node daemons on real devices with heartbeat, load, and
+  claim-based scheduling. An MCP gateway would run *as a node*.
+- **Task queues (Celery, Asynq, taskiq)** — queue workers are deployed and
+  centrally configured; IOWAP nodes advertise themselves. No capability
+  discovery, no heterogeneous device fleet.
+- **Multi-agent frameworks (Autogen, agent-framework, swarms)** — they
+  coordinate agents within a single runtime. IOWAP is the device fabric
+  *under* the agents.
+- **Workflow tools (n8n, Activepieces)** — their "node" is a graph step in
+  one engine. IOWAP nodes are independently running machines, and the flow
+  runner composes *across* them.
+
+In one sentence: the relay answers **WHERE** a task can run, nodes answer
+**HOW**, and the flow runner answers **WHAT** — no layer orchestrates the
+others. Agents (such as the Hermes desktop integration) are clients of this
+fabric, not its center.
+
 ## Glossary
 
 | Term | Meaning |
