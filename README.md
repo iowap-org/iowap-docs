@@ -17,6 +17,7 @@
 ├── node/                    # Node framework documentation
 │   ├── setup.md             #   Node installation & registration
 │   ├── ha-node.md           #   Home Assistant node (HAOS app + integration)
+│   ├── hermes-integration.md#   Hermes desktop control surface (fleet + tasks)
 │   ├── cli-reference.md     #   Full CLI reference
 │   ├── node-config.md       #   node.yaml configuration
 │   ├── node-daemon.md       #   Daemon operation & service management
@@ -45,6 +46,7 @@ This repo contains all documentation for the [IOWAP](https://github.com/iowap-or
 | Relay Server | [iowap-org/iowap-server](https://github.com/iowap-org/iowap-server) |
 | Node Framework | [iowap-org/iowap-node](https://github.com/iowap-org/iowap-node) |
 | Storage Node | [iowap-org/iowap-storage](https://github.com/iowap-org/iowap-storage) |
+| Hermes Integration | [iowap-org/iowap-hermes-integration](https://github.com/iowap-org/iowap-hermes-integration) |
 | Meta | [iowap-org/iowap](https://github.com/iowap-org/iowap) |
 
 ## License
