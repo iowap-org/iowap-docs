@@ -17,7 +17,7 @@ two installers: the Supervisor **app store** reads `iowap/`, HACS reads
 
 - A running, reachable relay server (see [../server/setup.md](../server/setup.md))
 - Home Assistant OS (or Supervised) with the Supervisor API
-- The relay URL, e.g. `http://192.168.2.60:8788`
+- The relay URL, e.g. `http://192.0.2.60:8788`
 
 ## Installation
 
@@ -52,7 +52,7 @@ ever sees it.
 
 | Option | Type / default | Purpose |
 |--------|----------------|---------|
-| `relay_url` | url, **required** | Relay base URL, e.g. `http://192.168.2.60:8788` |
+| `relay_url` | url, **required** | Relay base URL, e.g. `http://192.0.2.60:8788` |
 | `log_level` | `trace`…`ERROR` (default `INFO`) | App log verbosity |
 | `rate_limit_per_min` | int 1–120 (default 20) | Per-capability call limit; throttles runaway automations |
 | `lock_level` | `read` \| `write` (default `read`) | `write` additionally publishes the lock/unlock capabilities |

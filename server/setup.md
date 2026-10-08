@@ -364,7 +364,7 @@ WAL mode allows the hot backup to run while the relay is serving requests.
 Schedule it with cron:
 
 ```cron
-0 3 * * *  sqlite3 /home/felix/.relay/server.db ".backup /home/felix/.relay/backup/server-$(date +\%F).db"
+0 3 * * *  sqlite3 ~/.relay/server.db ".backup ~/.relay/backup/server-$(date +\%F).db"
 ```
 
 ### Recovery from a corrupt DB
@@ -486,8 +486,8 @@ After=network.target
 [Service]
 Type=simple
 User=felix
-WorkingDirectory=/home/felix/projects/iowap-server
-ExecStart=/home/felix/projects/iowap-server/.venv/bin/relay-server server --port 8788
+WorkingDirectory=<iowap-server-repo>
+ExecStart=<iowap-server-repo>/.venv/bin/relay-server server --port 8788
 Environment=RELAY_ENABLE_MDNS=true
 # REQUIRED: Set RELAY_SESSION_SECRET or create ~/.relay/config.yaml with
 # session_secret. Without it the server refuses to start.
@@ -530,10 +530,10 @@ sudo systemctl restart iowap.service
 | `database is locked` | Rare with WAL. Another relay process is likely running on the same `server.db` — stop duplicates. If it persists, restart the relay. |
 | `OperationalError: no such table` | A migration did not run. Stop the relay, back up `server.db`, then restart so the migration runner fires. |
 | Server refuses to start: "session_secret required" | Set `session_secret` in `~/.relay/config.yaml` or `RELAY_SESSION_SECRET` (see §2 / §11). |
-| `permission denied` on `~/.relay/server.db` | The systemd `User=` must own `~/.relay/`. `chown -R felix:felix ~/.relay`. |
+| `permission denied` on `~/.relay/server.db` | The systemd `User=` must own `~/.relay/`. `chown -R <user>:<user> ~/.relay`. |
 | Disk full under `~/.relay/` | Artifacts and the DB live here. Move `artifacts_dir` to a larger mount in `config.yaml`, then restart. |
 | `pip install -e .` fails | Activate the venv first (`source .venv/bin/activate`); ensure build tools are present (`python3-dev`, `build-essential`). |
-| venv not picked up by systemd | Use absolute paths in `ExecStart` (`/home/felix/.../.venv/bin/relay-server`), not `relay-server` from `$PATH`. |
+| venv not picked up by systemd | Use absolute paths in `ExecStart` (`<repo>/.../.venv/bin/relay-server`), not `relay-server` from `$PATH`. |
 | Firewall blocks nodes | Open port 8788 (TCP) on the relay host (`ufw allow 8788` / firewalld). mDNS needs UDP 5353 if you advertise `.local`. |
 | `413 Request Entity Too Large` from the proxy | Raise the proxy body limit above `max_upload_bytes` (100 MiB default) — see §9. |
 | SSE events never arrive through the proxy | Disable proxy buffering and raise the read timeout for the events path — see §9. |

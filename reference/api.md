@@ -481,7 +481,7 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/storage/upload" \
 {
   "artifact_id": "artifact_a1B2c3D4",
   "name": "report.pdf",
-  "path": "/home/felix/.relay/artifacts/artifact_a1B2c3D4",
+  "path": "~/.relay/artifacts/artifact_a1B2c3D4",
   "size_bytes": 1234567,
   "mime_type": "application/pdf",
   "created_by": "V34ETT74"

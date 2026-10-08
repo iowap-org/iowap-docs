@@ -649,9 +649,9 @@ node-cli node register <server> [--name NAME] [--force] [--timeout SECONDS] [--j
 | `--json` | Machine-readable output |
 
 ```bash
-node-cli node register 192.168.2.10:8788 --name my-node
+node-cli node register 192.0.2.10:8788 --name my-node
 # -> ✅ Node registered: my-node (ID=V34ETT74)
-# ->    Server:  http://192.168.2.10:8788
+# ->    Server:  http://192.0.2.10:8788
 # ->    Status:  pending
 # ->    Token:   temporary tp_-token, expires 2026-09-07T15:00:00+00:00
 # ->
@@ -825,8 +825,8 @@ node-cli server metrics [server] [--json]
 | `--json` | Machine-readable output |
 
 ```bash
-node-cli server health 192.168.2.10:8788
-# -> ✅ http://192.168.2.10:8788 — IOWAP 2.x (server)
+node-cli server health 192.0.2.10:8788
+# -> ✅ http://192.0.2.10:8788 — IOWAP 2.x (server)
 # ->    Database:  ok
 # ->    Scheduler: ok
 # ->    Nodes:     3/4 online
@@ -1125,7 +1125,7 @@ node-cli --json route list
 the node find the relay via mDNS.
 
 ```bash
-node-cli relay set --server-url http://192.168.2.10:8788   # pin (discovery off)
+node-cli relay set --server-url http://192.0.2.10:8788   # pin (discovery off)
 node-cli relay set --discover                              # unpin (discovery on)
 node-cli relay discover [--name "IOWAP Relay Service"] [--timeout 5]
 ```
@@ -1397,7 +1397,7 @@ With `--json`:
   "before_version": "2.3.6",
   "after_version": "2.3.8",
   "restarted": true,
-  "wheel_path": "/home/felix/.relay/wheels/iowap_node-2.3.8-py3-none-any.whl"
+  "wheel_path": "~/.relay/wheels/iowap_node-2.3.8-py3-none-any.whl"
 }
 ```
 

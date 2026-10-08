@@ -69,7 +69,7 @@ Browser (Dashboard iFrame)
        │
        │ Session cookie
        ▼
-Relay (192.168.2.60:8788)
+Relay (192.0.2.60:8788)
        │
        │ Checks auth → forwards to Dynamic Route
        ▼
@@ -190,7 +190,7 @@ capabilities:
     description: "Hosts HTML dashboard pages for other capabilities."
     auto_publish: true
     claimable: true
-    handler: /home/felix/projects/iowap-server/nodes/handlers/ssn-capability-pages.sh
+    handler: <iowap-server-repo>/nodes/handlers/ssn-capability-pages.sh
     max_parallel: 1
     timeout: 300
 

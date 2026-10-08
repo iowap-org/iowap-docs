@@ -87,7 +87,7 @@ curl -X POST http://<relay-ip>:8788/relay/v2/admin/nodes/<node_id>/approve \
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `RELAY_URL` | no* | mDNS discovery | Relay base URL, e.g. `http://192.168.1.50:8788`. **If unset, the node finds the relay via mDNS on the LAN** (T-152). |
+| `RELAY_URL` | no* | mDNS discovery | Relay base URL, e.g. `http://192.0.2.50:8788`. **If unset, the node finds the relay via mDNS on the LAN** (T-152). |
 | `NODE_NAME` | no | hostname | Display name in the dashboard |
 | `NODE_ENDPOINT` | no | auto (own IP) | Endpoint through which the relay reaches the node (for bridge routes). **Derived automatically from the node IP + port 8791** — only set if the relay cannot reach the node directly. |
 | `NODE_ROLE` | no | `worker` | `service` for storage (set in the image) |

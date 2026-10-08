@@ -130,10 +130,10 @@ STATE_FILE.write_text(json.dumps(state, indent=2))     # iowap-agent.json
 {
   "node_id": "V34ETT74",
   "node_name": "my-node",
-  "endpoint": "http://192.168.1.60:9000",
+  "endpoint": "http://192.0.2.60:9000",
   "registration_secret": "rs_...",
   "capabilities": [{"name": "chat", "version": "1.0.0"}],
-  "base_url": "http://192.168.1.50:8788"
+  "base_url": "http://192.0.2.50:8788"
 }
 ```
 

@@ -11,7 +11,7 @@ behind nodes, capabilities, and tokens see [../concepts.md](../concepts.md) and
 
 ## Prerequisites
 
-- The relay URL (e.g. `http://192.168.2.10:8788` or `http://iowap.local:8788`)
+- The relay URL (e.g. `http://192.0.2.10:8788` or `http://iowap.local:8788`)
 - Python 3.11+
 - Network access to the relay
 
@@ -52,7 +52,7 @@ registration — both are covered by `relay set`; see
 
 ```bash
 # Pin once (recommended for fixed installations): discovery stays off.
-node-cli relay set --server-url http://192.168.2.10:8788
+node-cli relay set --server-url http://192.0.2.10:8788
 
 # Or unpin — removes every persisted base_url (relay_config.json AND the
 # iowap-agent.json state pin, complete since 2.3.17; earlier wheels left
@@ -72,7 +72,7 @@ Verify without touching the config first:
 
 ```bash
 node-cli relay discover --timeout 5
-# -> http://192.168.2.10:8788
+# -> http://192.0.2.10:8788
 #    service: IOWAP Relay Service (_http._tcp)   (second line only without --name)
 ```
 
@@ -82,8 +82,8 @@ node-cli relay discover --timeout 5
 state files, creates them itself, and writes nothing on failure.
 
 ```bash
-node-cli node register 192.168.2.10:8788      # IP:port or full URL (default port 8788)
-node-cli node register http://192.168.2.10:8788 --name my-node --json
+node-cli node register 192.0.2.10:8788      # IP:port or full URL (default port 8788)
+node-cli node register http://192.0.2.10:8788 --name my-node --json
 # Re-registering an existing identity requires --force
 ```
 
@@ -104,7 +104,7 @@ State file schema:
   "endpoint": null,
   "registration_secret": "rs_...",
   "capabilities": [],
-  "base_url": "http://192.168.2.10:8788"
+  "base_url": "http://192.0.2.10:8788"
 }
 ```
 
@@ -224,9 +224,9 @@ After=network-online.target
 [Service]
 Type=simple
 User=felix
-WorkingDirectory=/home/felix/iowap-node
-Environment=RELAY_BASE_URL=http://192.168.2.10:8788
-ExecStart=/home/felix/iowap-node/.venv/bin/python -m nodes.common.node_cli daemon foreground
+WorkingDirectory=<iowap-node-repo>
+Environment=RELAY_BASE_URL=http://192.0.2.10:8788
+ExecStart=<iowap-node-repo>/.venv/bin/python -m nodes.common.node_cli daemon foreground
 Restart=always
 RestartSec=10
 
@@ -334,7 +334,7 @@ A minimal Proxmox VE container setup for a worker node.
 pct create 110 debian-12-standard \
   --hostname iowap-worker \
   --cores 2 --memory 2048 --rootfs local-lvm:10 \
-  --net0 name=eth0,bridge=vmbr0,ip=192.168.2.50/24,gw=192.168.2.1 \
+  --net0 name=eth0,bridge=vmbr0,ip=192.0.2.50/24,gw=192.0.2.1 \
   --unprivileged 0          # privileged: python-keyring needs keyctl
 pct start 110
 pct enter 110

@@ -139,7 +139,7 @@ resolved, remote peers are rejected (warning at bind; set
 
 ```bash
 node-cli hp get <<< "$envelope"
-# → {"path":"/home/felix/.relay/tmp/<task_id>/report.pdf","size_bytes":1234,"src":"inline"}
+# → {"path":"~/.relay/tmp/<task_id>/report.pdf","size_bytes":1234,"src":"inline"}
 ```
 
 - Reads the envelope from **stdin** or `--file <path>`; invalid JSON or
