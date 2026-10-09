@@ -1,5 +1,10 @@
 # IOWAP Documentation
 
+> **⚠️ LEGACY (T-215):** This is the OLD documentation tree, kept only as the rewrite
+> source reference. Each page is being re-read, verified against the actual code, and
+> rewritten from scratch. Nothing here is maintained — do not edit. This directory is
+> deleted when the rewrite completes (git history preserves it).
+
 **Setup guides, concepts, API reference, and node documentation for the IOWAP ecosystem.**
 
 ---
