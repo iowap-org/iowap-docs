@@ -1,0 +1,51 @@
+# IOWAP Documentation — llms.txt
+
+> Machine-readable index of the IOWAP docs. One entry per page: where it
+> lives, what it answers. Terminology: concepts/glossary.
+> This file is served at /relay/v2/docs as part of the docs tree; keep it
+> in sync when adding pages (CONTRIBUTING.md) — same table as README.
+
+## Entry (read these first)
+- [getting-started](getting-started.md): 8 scenario paths into the docs
+- [concepts/overview](concepts/overview.md): what the relay is, positioning
+- [concepts/glossary](concepts/glossary.md): verbatim terminology — titles bind to it
+
+## Concepts (model)
+- [concepts/nodes](concepts/nodes.md): node model, heartbeat, statuses, busy mode
+- [concepts/capabilities](concepts/capabilities.md): routing keys, naming suffixes, transfer ladder, dynamic routes intro
+- [concepts/tasks](concepts/tasks.md): task/stage lifecycle, status registry, failure policy, leases/orphans
+- [concepts/tokens](concepts/tokens.md): adm_/rs_/tp_/rt_ credential families, TTLs, lifecycle
+- [concepts/artifacts](concepts/artifacts.md): transient store + inline/artifact/bridge ladder
+- [concepts/observability](concepts/observability.md): /health /ready /metrics, trace_id, JSON logs
+- [concepts/security](concepts/security.md): boundary model, enforcement layer table
+
+## Relay server (ops)
+- [server/setup](server/setup.md): install, session secret, master seed, systemd, TLS, config reference
+- [server/admin](server/admin.md): node approval/token/delete, recovery mode
+- [server/dashboard](server/dashboard.md): UI, users/groups, metrics page
+- [server/docker](server/docker.md): container deploy (iowap-docker repo), postgres, TLS
+- [server/database](server/database.md): backend choice, backups, readiness
+
+## Node (ops + framework)
+- [node/setup](node/setup.md): install, relay pin/discover, register, profiles, daemon, systemd
+- [node/operations](node/operations.md): SSE vs polling daemon, status control, token maintenance, backoff
+- [node/config](node/config.md): node.yaml, profiles.d, relay_config.json, file map
+- [node/tokens](node/tokens.md): refresh/recovery flows, local credential files
+- [node/capabilities](node/capabilities.md): profile anatomy, handler, chat.ai vs agent.ai, dynamic routes, temp bridge routes
+- [node/cli](node/cli.md): full command tree + behaviours of node-cli
+- [node/handlers/contract](node/handlers/contract.md): normative request/response envelope, tolerance table, result_path_hints
+- [node/handlers/primitives](node/handlers/primitives.md): hp put/get, __iowap_ref__ envelopes, complete_by_script
+- [node/integrations/home-assistant](node/integrations/home-assistant.md): HAOS app + integration, capability matrix, submit_task
+- [node/integrations/hermes](node/integrations/hermes.md): desktop chip/pane/task pages, node-cli backend
+
+## Storage (ops)
+- [storage/storage](storage/storage.md): capabilities, bridge server, channels, backups/retention, tar transfer
+- [storage/qnap](storage/qnap.md): QNAP Container Station deployment
+
+## Federation (planned — implemented nowhere)
+- [federation/concept](federation/concept.md): multi-relay bridging design, two-sided model — not implemented
+
+## Reference (look-up)
+- [reference/api](reference/api.md): endpoint tables (auth/discovery/scheduler/storage/routes/dashboard/admin/docs) + worked cURL examples
+- [reference/database-backends](reference/database-backends.md): SQLAlchemy Core layer, migrations, adding a backend
+- [reference/design-board](reference/design-board.md): historical design records
