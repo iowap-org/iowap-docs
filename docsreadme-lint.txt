@@ -1,6 +1,0 @@
-README.md:9 error MD040/fenced-code-language Fenced code blocks should have a language specified [Context: "```"]
-README.md:42:81 error MD013/line-length Line length [Expected: 80; Actual: 190]
-README.md:45:8 error MD060/table-column-style Table column style [Table pipe is missing space to the left for style "compact"]
-README.md:45:20 error MD060/table-column-style Table column style [Table pipe is missing space to the left for style "compact"]
-README.md:45:1 error MD060/table-column-style Table column style [Table pipe is missing space to the right for style "compact"]
-README.md:45:8 error MD060/table-column-style Table column style [Table pipe is missing space to the right for style "compact"]
