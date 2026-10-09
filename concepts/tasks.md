@@ -28,8 +28,9 @@ nodes, tasks, and stages with different transition rules), transition
 checks are entity-specific (`node_can_transition`, `task_can_transition`,
 `stage_can_transition`). Every transition publishes a `status_changed`
 SSE event with `{entity_type, entity_id, old_status, new_status}` —
-subscribe with `event_types: ["status_changed"]` to watch transitions
-only.
+note that the stream's server-side `types` filter only whitelists a
+subset (`status_changed` is published but not filterable; filter
+client-side if you need it exclusively).
 
 ## How it works
 

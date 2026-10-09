@@ -18,7 +18,7 @@ Node-side usage: [node setup](../node/setup.md).
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/health` | none | Liveness (process up) |
-| GET | `/ready` | none | Readiness — probes database, maintenance loop, event bus; returns `{"status": "ready"\|"degraded", "database", "scheduler", "event_bus", "maintenance_age_seconds", "maintenance_last_ok"}` |
+| GET | `/ready` | none | Readiness — probes database, maintenance loop; returns `{"status": "ready"\|"degraded", "database", "scheduler", "maintenance_age_seconds", "maintenance_last_ok"}` — the event bus is deliberately **not** probed (it is always available in-process, a subscriber count says nothing about relay health) |
 | GET | `/metrics` | none | Prometheus text — auth-failure counters, node/task/stage gauges, latency histograms, retry ratio, per-node load/queue, throughput |
 
 Detail pages: [observability](../concepts/observability.md).
@@ -58,7 +58,6 @@ Heartbeat body reference: [worked examples](#worked-examples-curl) below.
 | POST | `/relay/v2/scheduler/task-simple` | `rt_…` | Submit a single-stage task |
 | POST | `/relay/v2/scheduler/claim` | `rt_…` | Claim one pending stage — response includes `capability_details` when metadata was advertised |
 | POST | `/relay/v2/scheduler/stages/{stage_id}/complete` | `rt_…` | Complete a claimed stage with a result dict |
-| POST | `/relay/v2/scheduler/enforce-timeouts` | `rt_…` (admin) | Enforce stage timeouts |
 | POST | `/relay/v2/scheduler/tasks/{task_id}/notes` | `rt_…` | Append a note (1–2000 chars) — the long-run lease keeps alive via notes |
 | POST | `/relay/v2/scheduler/artifacts/{task_id}` | `rt_…` | Associate artifacts with a task |
 | GET | `/relay/v2/scheduler/artifacts/{task_id}` | `rt_…` | List task artifacts |
@@ -67,7 +66,9 @@ Heartbeat body reference: [worked examples](#worked-examples-curl) below.
 Status gates: reporting routes (completion, notes, artifacts, storage)
 accept any live node — `approved`/`online`/`idle`/`busy`/`maintenance`
 — so a busy node finishes running work and keeps its lease alive. `claim`
-also accepts busy nodes but answers `{"claimed": false}`. Task submission
+accepts busy nodes too and answers `{"claimed": false}` (HTTP 200) when
+nothing matches or the node may not claim — the claim route has no 403
+path; eligibility is encoded in `claimed`. Task submission
 and read-only task routes stay approved/online-only (a `403` there can
 mean "busy"). Policies per entity:
 [tasks](../concepts/tasks.md).
@@ -84,20 +85,26 @@ mean "busy"). Policies per entity:
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/relay/v2/events/stream` | `rt_…` (`?node=<id>`) | SSE stream |
+| GET | `/relay/v2/events/stream` | `rt_…` (`?node=<own id>`; `types` filter optional) | SSE stream |
 
-Selected event types: `task_created`, `task_completed`, `task_failed`,
-`task_timed_out`, `stage_claimed`, `stage_completed`, `stage_failed`,
-`stage_timed_out`, `node_online`, `node_offline`, `status_changed`
-(payload `{entity_type, entity_id, old_status, new_status}`). Filter with
-`?types=status_changed`.
+The bus publishes: `task_created`, `task_completed`, `task_failed`,
+`stage_claimed`, `stage_completed`, `stage_failed`, `status_changed`
+(payload `{entity_type, entity_id, old_status, new_status}`),
+`node_online`, `node_offline`, `presence_changed`, `artifact_created`,
+`artifact_deleted`.
+
+Server-side filtering via `types` is **whitelisted** and narrower:
+`node_online`, `node_offline`, `task_created`, `stage_claimed`,
+`stage_completed`, `presence_changed`, `artifact_created` — any other
+value answers `400 Unknown event types`. The filtered stream is meant for
+daemon-style consumers; everything else arrives unfiltered.
 
 ## Storage — `/relay/v2/storage`
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/relay/v2/storage/upload` | `rt_…` | Upload a file as an artifact (multipart, default limit 100 MiB) |
-| GET | `/relay/v2/storage/files/{artifact_id}` | `rt_…` | Download an artifact (streams in 64 KiB chunks) |
+| GET | `/relay/v2/storage/files/{artifact_id}` | `rt_…` | Download an artifact (efficient streaming response) |
 | GET | `/relay/v2/storage/files/{artifact_id}/meta` | `rt_…` | Artifact metadata |
 | DELETE | `/relay/v2/storage/files/{artifact_id}` | `rt_…` | Delete an artifact |
 | GET | `/relay/v2/storage/list` | `rt_…` | List artifacts (`?task_id=…`) |
@@ -145,11 +152,16 @@ Details: [capabilities how-to](../node/capabilities.md),
 
 ## Dashboard — `/relay/v2/dashboard`
 
-Session-cookie auth unless noted. UI pages and their JSON API:
+Session-cookie auth for account/admin routes unless noted. The home
+page serves the **public Community Dashboard** (no auth); UI pages and
+their JSON API:
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/relay/v2/dashboard/` | session | Home |
+| GET | `/relay/v2/dashboard/` | none | Home (public Community Dashboard) |
+| GET | `/relay/v2/dashboard/admin` | session | Admin overview page |
+| GET | `/relay/v2/dashboard/node/{node_id}` | session | Node profile page |
+| GET | `/relay/v2/dashboard/user/{user_id}` | session | User profile page |
 | GET/POST | `/relay/v2/dashboard/login` | none | Login page / authenticate |
 | GET | `/relay/v2/dashboard/bootstrap` | none | First-admin page (master seed) |
 | POST | `/relay/v2/dashboard/api/bootstrap` | master seed | Create the first human admin |
@@ -159,6 +171,13 @@ Session-cookie auth unless noted. UI pages and their JSON API:
 | POST | `/relay/v2/dashboard/api/me/password` | session | Change own password |
 | GET | `/relay/v2/dashboard/api/overview` | session | Cluster overview JSON |
 | GET | `/relay/v2/dashboard/api/events/recent` | session | Recent events |
+| GET | `/relay/v2/dashboard/api/endpoints` | session | List exposed v2 endpoints (info view) |
+| GET | `/relay/v2/dashboard/api/capabilities` | session | Capabilities advertised by online nodes |
+| GET | `/relay/v2/dashboard/api/transfer-status` | session | Transfer-ladder config + bridge-availability |
+| POST | `/relay/v2/dashboard/api/transfer-config` | session | Edit transfer-ladder bounds (admin UI sliders) |
+| POST | `/relay/v2/dashboard/api/task-submit` | session | Submit a task from a node page |
+| GET | `/relay/v2/dashboard/api/tasks/{task_id}` | session | Task detail for the tasks view |
+| GET | `/relay/v2/dashboard/api/permissions` | session | Permission catalog |
 | GET/POST | `/relay/v2/dashboard/api/users` · `/users/{id}/…` | session | User management (list/create/groups/password/active/delete) |
 | GET/POST | `/relay/v2/dashboard/api/groups` · `/groups/{id}/permissions` | session | Group/permission management |
 | GET | `/relay/v2/dashboard/api/metrics` | session | Metrics JSON for the built-in page |

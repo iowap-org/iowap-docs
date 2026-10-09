@@ -15,8 +15,8 @@ Grafana required):
   `relay_stages{status="…"}`). A Prometheus server can scrape it without
   code changes.
 - **`/ready`** (root, no auth) — readiness probe: database round-trip,
-  maintenance-loop age, event bus, and last-sweep outcome
-  (`{"status": "ready"|"degraded", "database", "scheduler", "event_bus",
+  maintenance-loop age, and last-sweep outcome
+  (`{"status": "ready"|"degraded", "database", "scheduler",
   "maintenance_age_seconds", "maintenance_last_ok"}`). A sweep with any
   errored task flips `maintenance_last_ok` and degrades readiness.
 - **Metrics dashboard** at `/relay/v2/dashboard/metrics` (session auth) —
