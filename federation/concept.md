@@ -1,11 +1,14 @@
 # Federation
 
-> **Status: partially implemented.** The federation node's V1 forward
-> path (Inbox/Outbox, transport abstraction, task export) ships in
+> **Status:** V1 forward path implemented; result return leg open.
+> *(Canonical status string — use it verbatim in every repo's README and
+> status block; the detailed table lives in the iowap-federation repo.)*
+> The federation node's V1 forward path (Inbox/Outbox, transport
+> abstraction, task export) ships in
 > [iowap-org/iowap-federation](https://github.com/iowap-org/iowap-federation)
-> (see its `docs/federation.md` implementation-status section and tests).
-> The return path is open design work. Framework-internal APIs for
-> implementing a federation node: its `docs/framework-ref.md`.
+> (implementation notes + status table: its `docs/federation.md`).
+> The result return leg is open design work. Framework-internal APIs for
+> developing against the node framework: its `docs/framework-ref.md`.
 
 ## What it is
 

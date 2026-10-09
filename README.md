@@ -37,7 +37,7 @@ node/                         # Node operations + framework
 ├── setup.md  operations.md  config.md  tokens.md  capabilities.md  cli.md
 ├── handlers/                 #   contract.md (envelope I/O), primitives.md (hp put/get)
 └── integrations/             #   home-assistant.md, hermes.md
-federation/                   # Planned multi-relay bridging — not implemented
+federation/                   # Cross-relay bridging — forward path ships, return leg open
 └── concept.md
 storage/                      # NAS storage node
 ├── storage.md  qnap.md

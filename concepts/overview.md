@@ -59,7 +59,7 @@ The details live on their own pages:
 - Capability routing keys: [capabilities](capabilities.md)
 - Task/stage lifecycle and statuses: [tasks](tasks.md)
 - Credential families: [tokens](tokens.md)
-- Security model: [security.md](security.md)
+- Security model: [security](security.md)
 
 ## What it is NOT
 

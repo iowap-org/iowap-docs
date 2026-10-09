@@ -24,7 +24,7 @@ Names are lowercase, dot-separated namespaces:
 
 | Suffix | Meaning | Example |
 |--------|---------|---------|
-| `.native` | Runs directly on the node, no local AI. | `storage.archive.native`, `image.generate.mflux` |
+| `.native` | Runs directly on the node, no local AI. | `storage.archive.native`, `ha.light.on.native` |
 | `.ai` | Delegates to a local AI/LLM for reasoning. | `chat.ai`, `code.ai`, `agent.ai` |
 | `.relay` | Relay-internal orchestration stages. | `llm.decide_cleanup.relay` |
 

@@ -38,8 +38,9 @@ control (`busy`/`idle`): [operations](node/operations.md).
 ## 4. I write a client against the API
 
 Start with the [API reference](reference/api.md) (auth → register →
-heartbeat → claim → complete), grab a token via
-[register](reference/api.md), watch progress on the SSE stream.
+heartbeat → claim → complete); the "Register a node" worked example there
+shows how to grab a first token. Watch progress on the
+SSE stream.
 The `node-cli` is itself an API client — [CLI reference](node/cli.md).
 
 ## 5. I want to build a capability / handler
