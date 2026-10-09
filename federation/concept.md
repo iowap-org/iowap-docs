@@ -1,35 +1,19 @@
 # Federation
 
-> **⚠️ Not implemented.** This is a concept page. The design has been
-> refined on the boards; no code exists yet. Implementation planning is
-> tracked as the federation task block (iowap-federation repo + board).
+> **Status: partially implemented.** The federation node's V1 forward
+> path (Inbox/Outbox, transport abstraction, task export) ships in
+> [iowap-org/iowap-federation](https://github.com/iowap-org/iowap-federation)
+> (see its `docs/federation.md` implementation-status section and tests).
+> The return path is open design work. Framework-internal APIs for
+> implementing a federation node: its `docs/framework-ref.md`.
 
-## What it is (planned)
+## What it is
 
 A **Federation Node** bridges capabilities between two or more relays.
 It is not a special node type — it is a normal node heartbeating the
 `federation` capability. When connected to a remote relay it imports
 remote capabilities and offers them locally, or exports local
 capabilities to the remote relay.
-
-```
-┌── Local Relay ──────────────────┐       ┌── Remote Relay ─────────────────┐
-│                                  │       │                                  │
-│  ┌──────────────────────────┐   │       │   ┌──────────────────────────┐  │
-│  │  Federation Node         │──┼───────┼──→│  Federation Node         │  │
-│  │  heartbeats `federation` │   │transport│  │  heartbeats `federation` │  │
-│  │  + subscribed caps       │   │ (HTTP/  │  │  + exported caps         │  │
-│  │                          │   │  email/ │  │                          │  │
-│  └──────────────────────────┘   │   P2P)   │  └──────────────────────────┘ │
-│         │                       │       │         │                        │
-│    ┌────┴─────┐                 │       │    ┌────┴─────┐                 │
-│    │ Tasks    │                 │       │    │ Tasks    │                 │
-│    │ forwarded│                 │       │    │ executed │                 │
-│    └──────────┘                 │       │    └──────────┘                 │
-└──────────────────────────────────┘       └──────────────────────────────────┘
-```
-
-## How it works (planned)
 
 The node has two strictly separated sides:
 

@@ -42,8 +42,8 @@
 - [storage/storage](storage/storage.md): capabilities, bridge server, channels, backups/retention, tar transfer
 - [storage/qnap](storage/qnap.md): QNAP Container Station deployment
 
-## Federation (planned — implemented nowhere)
-- [federation/concept](federation/concept.md): multi-relay bridging design, two-sided model — not implemented
+## Federation (partially implemented — forward path ships)
+- [federation/concept](federation/concept.md): multi-relay bridging (two-sided model, namespacing, return path open)
 
 ## Reference (look-up)
 - [reference/api](reference/api.md): endpoint tables (auth/discovery/scheduler/storage/routes/dashboard/admin/docs) + worked cURL examples
