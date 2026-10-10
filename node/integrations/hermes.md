@@ -4,10 +4,13 @@ Drive the IOWAP fleet straight from the
 [Hermes](https://hermes-agent.nousresearch.com) desktop app — no browser,
 no dashboard detour. Repo:
 [iowap-org/iowap-hermes-integration](https://github.com/iowap-org/iowap-hermes-integration)
-(plugin id `iowap`, current version `0.3.0`).
+(plugin id `iowap`, current version `0.3.1`,
+[CHANGELOG in the repo](https://github.com/iowap-org/iowap-hermes-integration/blob/main/CHANGELOG.md)).
 
 The desktop app is **not an IOWAP node** — it is a control surface: it
-submits and watches tasks, it does not register as an executor.
+submits and watches tasks, it does not register as an executor. All data
+stays local: the plugin shells out to the local `node-cli` against your
+own relay — no third-party network calls, no telemetry.
 
 | Surface | What | Where |
 | -------- | ------ | ------- |
@@ -40,7 +43,20 @@ renderer.
   `~/.relay/iowap-agent.*` must exist (see [node setup](../setup.md));
   the backend reuses that identity and its token
 
-## 1. Install the desktop half
+## 1. Install from the plugin catalog
+
+```bash
+hermes plugins install iowap
+# updates:
+hermes plugins update iowap
+```
+
+The catalog entry pins the version; releases reach it through the
+upstream catalog update. Skip the source-install section below entirely.
+
+## A. Source install — desktop half
+
+For repo checkouts and development (catalog users skip this):
 
 Frontend files → `~/.hermes/desktop-plugins/iowap/`:
 
@@ -50,7 +66,7 @@ curl -o ~/.hermes/desktop-plugins/iowap/plugin.js \
   https://raw.githubusercontent.com/iowap-org/iowap-hermes-integration/main/desktop/plugin.js
 ```
 
-## 2. Install the backend half
+## B. Source install — backend half
 
 Backend files → `~/.hermes/plugins/iowap/dashboard/`:
 
@@ -87,9 +103,18 @@ verifies md5; frontend hot-reloads, backend edits need one app restart.
 
 Tasks submitted from agent sessions via `tools/iowap-task`
 (~/.local/bin/iowap-task, wraps `node-cli task submit`) merge into the
-shared flock-protected track store `~/.hermes/cache/task-track-iowap.json`
-— the tasks page shows them alongside UI submissions with the same status
-dots.
+shared flock-protected track store
+`~/.hermes/plugin-data/iowap/task-track-iowap.json` — the tasks page shows
+them alongside UI submissions with the same status dots.
+
+### Health probe and load values (0.3.1+)
+
+The backend probes relay health through `node-cli server health` — it
+never talks raw HTTP to the relay and does not parse the relay URL from
+state files; the target pin (`relay_config.json`, mDNS fallback) stays
+node-cli's business. Per-node `load_source` distinguishes host load
+(`loadavg`) from agent-scoped cgroup values — don't compare load numbers
+across nodes.
 
 ## Verification
 
