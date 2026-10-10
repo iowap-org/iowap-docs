@@ -59,7 +59,7 @@ the last sweep errored — treat `ready` as the primary liveness signal,
 - **Not a distributed tracing system** — there are spans per request but
   no trace propagation across nodes; the `trace_id` binds relay logs and
   the response header, that is deliberately all (tracing was reviewed and
-  rejected — it would break the relay's ahnungslos principle).
+  rejected — it would break the relay's clueless principle).
 - **Not an alerting stack** — counters and gauges expose state; alerting
   is the scraper's job.
 

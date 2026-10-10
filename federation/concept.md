@@ -28,7 +28,7 @@ The node has two strictly separated sides:
   forwards tasks to them or receives tasks from them. Transport-agnostic
   by design (candidate transports: HTTP, store-and-forward over email,
   peer-to-peer); task payloads cross as message envelopes with
-  end-to-end encryption — intermediate relays stay ahnungslos, in
+  end-to-end encryption — intermediate relays stay clueless, in
   keeping with the system's pass-through principle.
 
 Capability names imported from remote relays are namespaced
@@ -50,7 +50,7 @@ with long-lived node keys (planned), not runtime tokens.
   subscription decision by the operator.
 - **Not a relay-to-relay protocol** — federation runs through nodes on
   both sides; the relays themselves never talk to each other (keeps the
-  relay ahnungslos by construction).
+  relay clueless by construction).
 
 ## Related pages
 

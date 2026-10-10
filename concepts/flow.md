@@ -92,7 +92,7 @@ plans fresh.
 ## What it is NOT
 
 - **Not a server feature** — the relay never parses plans or aggregates;
-  all orchestration lives on the runner node (the relay stays ahnungslos
+  all orchestration lives on the runner node (the relay stays clueless
   by construction).
 - **Not a workflow engine with conditionals** — the plan is a DAG of
   submit-order edges; branching inside tasks is the task's business.
