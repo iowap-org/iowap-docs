@@ -95,7 +95,7 @@ re-approval** — `offline → online` is a valid transition.
 
 - **Not a workflow engine** — the DAG has `depends_on` edges and retries,
   no conditional branching, no templates; composition across machines is
-  the flow runner's job (separate node, `flow.run` capability).
+  the flow runner's job (see [flow](flow.md)).
 - **Not a cron** — tasks run when submitted and claimed, never on a
   schedule; recurring work is the submitter's concern.
 - **Not persistent storage** — a completed task's stages stay queryable,
@@ -106,6 +106,7 @@ re-approval** — `offline → online` is a valid transition.
 
 - [nodes](nodes.md) — statuses from the node's side, busy mode
 - [capabilities](capabilities.md) — how stages get matched to nodes
+- [flow](flow.md) — orchestration on top (plan → fan-out → join)
 - [handler contract](../node/handlers/contract.md) — completion and failure I/O rules
 - [CLI task commands](../node/cli.md) — submit, wait, results
 - [glossary](glossary.md) — verbatim terminology

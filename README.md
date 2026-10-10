@@ -26,6 +26,7 @@ concepts/                     # WHY/WAS — one page per model term
 ├── nodes.md                  #   Node model, heartbeat, statuses
 ├── capabilities.md           #   Routing keys, naming, ladder
 ├── tasks.md                  #   Task/stage lifecycle, status system
+├── flow.md                   #   Flows: dumb-Kanban orchestration via flow.run
 ├── tokens.md                 #   Credential families
 ├── artifacts.md              #   Transfer ladder (inline/artifact/bridge)
 ├── observability.md          #   /health /ready /metrics, logs
@@ -39,6 +40,8 @@ node/                         # Node operations + framework
 └── integrations/             #   home-assistant.md, hermes.md
 federation/                   # Cross-relay bridging — forward path ships, return leg open
 └── concept.md
+flow/                         # Orchestrator node (flow.run)
+└── runner.md                 #   deployment, catalog/history, submit+run flow.run
 storage/                      # NAS storage node
 ├── storage.md  qnap.md
 reference/                    # Look-up material

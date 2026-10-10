@@ -77,6 +77,7 @@ defines every term used in these docs.
 | Run the relay | [server setup](server/setup.md) (source) · [docker](server/docker.md) (container) · [QNAP storage](storage/qnap.md) (NAS node) |
 | Run a node | [node setup](node/setup.md) |
 | Write a capability | [capabilities how-to](node/capabilities.md) + [handler contract](node/handlers/contract.md) |
+| Orchestrate multi-step work | [flows](concepts/flow.md) → [flow runner](flow/runner.md) |
 | Automate via HA | [home assistant node](node/integrations/home-assistant.md) |
 | Script the API | [API reference](reference/api.md) |
 | Read one page on everything | [overview](concepts/overview.md) |
