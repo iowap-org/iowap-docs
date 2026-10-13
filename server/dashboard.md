@@ -15,9 +15,10 @@ admin seed (created on the relay host — see
 1. Open the dashboard login page
 2. Choose **Master seed**, paste the seed
 3. You are redirected to **Create First Admin**
-4. Enter a username (optional email) — the dashboard shows a generated
-   temporary password; store it
-5. Log out, log in as the new admin, change the password when prompted
+4. Enter a username (optional email) and submit, then hit
+   **Continue - set password** and set your final password — the server's
+   temporary password is carried in the form; no copy/logout/re-login.
+   You land on the dashboard logged in as the new admin.
 
 Master-seed login auto-disables after the first human admin exists; the
 bootstrap page only appears while no human admin exists.

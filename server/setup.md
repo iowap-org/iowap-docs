@@ -86,10 +86,12 @@ curl http://localhost:8788/health
 
 ## 5. Bootstrap the first human admin
 
-1. Open `http://<relay-host>:8788/relay/v2/dashboard/`
-2. Choose **Master seed**, paste the seed
-3. Create the first admin (username + generated temporary password)
-4. Log out, log in as the new admin, change the password when prompted
+1. Open `http://<relay-host>:8788/relay/v2/dashboard/login`
+2. Choose **Master seed**, paste the seed (the 1 h bootstrap session)
+3. On **Create First Admin**: enter a username, submit, hit
+   **Continue - set password**, and set your final password — the
+   temporary password is carried in the form; no copy/logout/re-login.
+4. You land on the dashboard logged in as the admin.
 
 Master-seed login is automatically disabled once a human admin exists.
 Day-to-day work happens with human accounts — see
