@@ -20,7 +20,7 @@ exactly these terms — humans and AI readers can rely on one vocabulary.
 | **Registration secret** (`rs_…`) | Recovery-only credential. TTL 7 days at issue, rotated on every recovery use. |
 | **Temporary token** (`tp_…`) | 24 h token issued on registration; replaced after admin approval. |
 | **Master admin seed** (`adm_…`) | Emergency dashboard credential created on the relay host, stored as bcrypt hash. |
-| **Bootstrap seed** (`bs_…`) | One-time 24 h session token after a master-seed dashboard login. |
+| **Master-seed session** | The 1 h signed `relay_user` cookie issued after a master-seed dashboard login (T-025). Bootstrap/recovery only — day-to-day auth is a human admin account. |
 | **Dashboard** | The web UI (session cookie auth) — node approval, task view, metrics. |
 | **Dynamic node route** | HTTP route a node registers via heartbeat; the relay proxies authenticated requests to it. Fail-closed upstream validation. |
 | **Temp bridge route** | TTL'd route tied to a `channel_id` for large-file streaming; reaped by a watchdog. |
