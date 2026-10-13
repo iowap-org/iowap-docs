@@ -14,7 +14,19 @@ path: [Docker](docker.md).
 Requirements: a Linux host (small server, NAS, or always-on PC), Python
 3.11+, LAN or overlay-network access.
 
-## 1. Install from source
+## 1. Install
+
+**One-liner (Linux, interactive)** — asks native (systemd USER unit) vs.
+Docker (prebuilt GHCR image), configures the database (SQLite default,
+PostgreSQL local/remote) and environment (homelab HTTP / internet TLS),
+creates the master admin seed, and prints the dashboard login URL. Re-running
+offers update / override / uninstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/iowap-org/iowap-server/main/install.sh | bash
+```
+
+**From source (manual)**:
 
 ```bash
 git clone --recursive https://github.com/iowap-org/iowap-server.git

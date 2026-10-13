@@ -6,7 +6,18 @@ relay URL, Python 3.11+, network reachability. Server side:
 
 ## 1. Install
 
-The node framework is its own repo — not part of iowap-server:
+**One-liner (Linux, interactive)** — asks native (systemd USER unit) vs.
+Docker (prebuilt GHCR image), configures the database (SQLite default,
+PostgreSQL local/remote) and environment (homelab HTTP / internet TLS),
+creates the master admin seed, and prints the dashboard login URL. Re-running
+offers update / override / uninstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/iowap-org/iowap-server/main/install.sh | bash
+```
+
+**From source (manual)** — the node framework is its own repo, not part of
+iowap-server:
 
 ```bash
 git clone https://github.com/iowap-org/iowap-node.git
