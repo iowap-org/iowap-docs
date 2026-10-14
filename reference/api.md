@@ -302,6 +302,14 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/task-simple" \
 # Pin to a specific node:
 #   add "owner_node_id": "<node_id>" to either form
 
+# Visibility (T-005g + T-227):
+#   a task with a set owner is readable only by that owner, the sender
+#   (submitted_by = the authenticated node, server-derived — a body
+#   "submitted_by" is ignored) and admins. Ownerless tasks are readable
+#   by every node until the first claim; an ownerless SINGLE-stage task
+#   becomes owned by its claiming node (visibility narrows to owner +
+#   sender). Multi-stage fan-out tasks never flip.
+
 # Full DAG:
 curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks" \
   -H "Authorization: Bearer rt_..." -H "Content-Type: application/json" \
