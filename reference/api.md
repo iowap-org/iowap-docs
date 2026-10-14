@@ -310,6 +310,15 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/task-simple" \
 #   becomes owned by its claiming node (visibility narrows to owner +
 #   sender). Multi-stage fan-out tasks never flip.
 
+# Queuing + priority (T-229):
+#   task-simple never rejects with 503 while the capability is busy —
+#   the task is stored pending and claimed as soon as a provider frees
+#   up. Without an explicit "priority" it queues at the TOP priority
+#   (10) so it runs ahead of lower-priority queued work; an explicit
+#   priority (0–10) wins. Equal-priority tasks run FIFO by creation
+#   order. Unknown capabilities still answer 404 (no queue, nothing
+#   could ever claim them).
+
 # Full DAG:
 curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks" \
   -H "Authorization: Bearer rt_..." -H "Content-Type: application/json" \
@@ -324,7 +333,8 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks" \
 ```
 
 Errors: `422` (payload > max, priority out of 0–10); `404` unknown
-`depends_on` id.
+capability (task-simple) or unknown `depends_on` id. task-simple queues
+pending while the capability is busy (T-229) — no 503.
 
 ### Upload / download an artifact
 
