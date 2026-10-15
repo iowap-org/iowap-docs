@@ -4,7 +4,7 @@ Drive the IOWAP fleet straight from the
 [Hermes](https://hermes-agent.nousresearch.com) desktop app — no browser,
 no dashboard detour. Repo:
 [iowap-org/iowap-hermes-integration](https://github.com/iowap-org/iowap-hermes-integration)
-(plugin id `iowap`, current version `0.3.1`,
+(plugin id `iowap`, current version `0.3.2`,
 [CHANGELOG in the repo](https://github.com/iowap-org/iowap-hermes-integration/blob/main/CHANGELOG.md)).
 
 The desktop app is **not an IOWAP node** — it is a control surface: it
@@ -38,7 +38,10 @@ renderer.
 
 - Hermes Agent with the desktop app and plugin support
 - `node-cli` ([iowap-node](https://github.com/iowap-org/iowap-node), pip)
-  on the desktop host
+  on the desktop host. The backend resolves it without `PATH`
+  assumptions: it reads the top-level `node_cli_path` key from
+  `~/.relay/node.yaml` first (self-stamped by node-cli since wheel
+  2.3.20), then falls back to `PATH` and known install locations.
 - A registered, approved node identity on the relay —
   `~/.relay/iowap-agent.*` must exist (see [node setup](../setup.md));
   the backend reuses that identity and its token

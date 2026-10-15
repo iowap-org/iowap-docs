@@ -49,6 +49,27 @@ Daemon heartbeats the new capabilities (or reloads on SIGHUP)
 A minimal profile without any capability is valid — node-level fields
 only ([config](config.md)).
 
+### Node-level top-level keys
+
+The active profile also carries node-level configuration as top-level
+keys (unknown top-level keys pass validation; only unknown keys *inside*
+a capability block are rejected):
+
+- `status` — operator busy/idle state, managed by
+  `node-cli node busy|idle|clear-status` (the CLI edits the active YAML
+  as text and preserves the rest of the document verbatim).
+- `node_name`, `description` — node overrides.
+- `node_cli_path` — **maintained by node-cli itself** (since wheel
+  2.3.20, T-226): every invocation and the daemon start stamp their own
+  absolute console-script path as the top-level key; `capabilities
+  publish` re-stamps after its byte-exact copy. The write is
+  drift-guarded (no mtime churn while the value matches) and
+  text-preserving. Consumers that cannot rely on `PATH` (a desktop
+  gateway, a session bridge) read this key first, then fall back to
+  `PATH` and known install locations. Treat any other top-level key as
+  operator config: put it into the working profile in `profiles.d/`, not
+  into the active file by hand.
+
 ## The handler
 
 A handler is an external subprocess the daemon runs for claimed stages.
