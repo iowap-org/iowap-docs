@@ -310,7 +310,7 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/task-simple" \
 #   becomes owned by its claiming node (visibility narrows to owner +
 #   sender). Multi-stage fan-out tasks never flip.
 
-# Queuing + priority (T-229):
+# Queuing + priority:
 #   task-simple never rejects with 503 while the capability is busy —
 #   the task is stored pending and claimed as soon as a provider frees
 #   up. Without an explicit "priority" it queues at the TOP priority
