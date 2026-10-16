@@ -24,7 +24,14 @@ order.
 
 **Commands:** one command per fenced code block with a language tag, the
 expected output as `# -> ` comment inside or right after the block.
-Values come from real captures, never invented.
+Values come from real captures, never invented. Source and regeneration:
+the `captures/` directory holds anonymized real relay output (`python3
+tools/capture.py` against a live relay — see captures/README.md). Docs CI
+enforces this mechanically: `tools/check_api_routes.py` diffs the endpoint
+tables in `reference/api.md` against the relay app's OpenAPI spec (a
+registered-route claim can no longer drift from code), and
+`tools/check_captures.py` rejects unsafe IPs, full token shapes, and own
+domains in any Markdown.
 
 **Status quo only:** no task ids (`T-xxx`), no phase numbers, no dates in
 prose. Version hints only where functionally relevant (`since 2.3.9`).

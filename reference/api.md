@@ -139,10 +139,10 @@ runs with the node's `rt_…` Bearer.
 
 | Method | Path | Caller auth | Purpose |
 |---|---|---|---|
-| GET | `/…/node-routes` | `rt_…` (node) | List the calling node's own routes |
-| POST | `/…/node-routes/register` | `rt_…` (node) | Register a temp route (`path`, `method`, `ttl_seconds`, `upstream`, `channel_id`) |
-| DELETE | `/…/node-routes/{node_id}/{path}` | `rt_…` (node, `?method=`) | Revoke a temp route before TTL |
-| GET/POST/PUT/PATCH | `/…/node-routes/{node_id}/{rest_of_path}` | per route `auth` (`session` / `node_token` / `none`) | Proxy to the node's upstream (streaming, chunkwise) |
+| GET | `/relay/v2/dashboard/api/node-routes` | `rt_…` (node) | List the calling node's own routes |
+| POST | `/relay/v2/dashboard/api/node-routes/register` | `rt_…` (node) | Register a temp route (`path`, `method`, `ttl_seconds`, `upstream`, `channel_id`) |
+| GET/POST/PUT/PATCH | `/relay/v2/dashboard/api/node-routes/{node_id}/{rest_of_path}` | per route `auth` (`session` / `node_token` / `none`) | Proxy to the node's upstream (streaming, chunkwise) |
+| DELETE | `/relay/v2/dashboard/api/node-routes/{node_id}/{rest_of_path}` | `rt_…` (node, `?method=`) | Revoke a temp route before TTL |
 
 `DELETE` is reserved for unregistering — a node exposing a DELETE
 upstream registers it under another method. Upstream validation is
@@ -165,7 +165,7 @@ their JSON API:
 | GET/POST | `/relay/v2/dashboard/login` | none | Login page / authenticate |
 | GET | `/relay/v2/dashboard/bootstrap` | none | First-admin page (master seed) |
 | POST | `/relay/v2/dashboard/api/bootstrap` | master seed | Create the first human admin |
-| POST | `/relay/v2/dashboard/logout` | session | Clear session |
+| GET/POST | `/relay/v2/dashboard/logout` | session | Clear session (GET redirects home, POST returns JSON, CSRF) |
 | GET | `/relay/v2/dashboard/change-password` | session | Forced password change |
 | GET | `/relay/v2/dashboard/api/me` | session | Current user |
 | POST | `/relay/v2/dashboard/api/me/password` | session | Change own password |
@@ -178,12 +178,18 @@ their JSON API:
 | POST | `/relay/v2/dashboard/api/task-submit` | session | Submit a task from a node page |
 | GET | `/relay/v2/dashboard/api/tasks/{task_id}` | session | Task detail for the tasks view |
 | GET | `/relay/v2/dashboard/api/permissions` | session | Permission catalog |
-| GET/POST | `/relay/v2/dashboard/api/users` · `/users/{id}/…` | session | User management (list/create/groups/password/active/delete) |
-| GET/POST | `/relay/v2/dashboard/api/groups` · `/groups/{id}/permissions` | session | Group/permission management |
+| GET | `/relay/v2/dashboard/api/users` | session | List users |
+| POST | `/relay/v2/dashboard/api/users` | session | Create a user |
+| POST | `/relay/v2/dashboard/api/users/{user_id}/groups` | session | Set a user's groups |
+| POST | `/relay/v2/dashboard/api/users/{user_id}/password` | session | Set a user's password |
+| POST | `/relay/v2/dashboard/api/users/{user_id}/active` | session | Activate/suspend a user |
+| DELETE | `/relay/v2/dashboard/api/users/{user_id}` | session | Delete a user |
+| GET | `/relay/v2/dashboard/api/groups` | session | List groups |
+| POST | `/relay/v2/dashboard/api/groups/{group_id}/permissions` | session | Set group permissions |
 | GET | `/relay/v2/dashboard/api/metrics` | session | Metrics JSON for the built-in page |
 | GET/POST | `/relay/v2/dashboard/api/scheduler-config` | session (system:config) | Claim settings (`claim_ttl_seconds` 60–300, `max_retries` 0–10) — live without restart |
 | GET | `/relay/v2/dashboard/metrics` | session | Metrics page (HTML) |
-| GET | `/relay/v2/dashboard/static/{filename}` | none | Static assets |
+| GET | `/relay/v2/dashboard/static/{filename}` | none | Static assets (not in openapi.json — include_in_schema=False) |
 
 ## Admin — `/relay/v2/admin`
 
@@ -204,8 +210,8 @@ No code change needed to add a page; legacy short names keep resolving.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/relay/v2/docs` | none | JSON index of served documents |
-| GET | `/relay/v2/docs/{slug}` | none | Render one document as HTML |
+| GET | `/relay/v2/docs` | none | JSON index of served documents (not in openapi.json — include_in_schema=False) |
+| GET | `/relay/v2/docs/{slug}` | none | Render one document as HTML (not in openapi.json — include_in_schema=False) |
 
 That's what `node-cli docs` consumes.
 

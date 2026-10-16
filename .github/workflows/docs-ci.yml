@@ -3,6 +3,8 @@ name: docs-ci
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "17 3 * * 1" # weekly: catch route drift coming from server main
 
 jobs:
   checks:
@@ -19,3 +21,21 @@ jobs:
           fi
       - name: llms.txt entries resolve
         run: python3 tools/check_links.py && true
+      - name: Docs hygiene (safe IPs, no token shapes, no own domains)
+        run: python3 tools/check_captures.py
+
+  api-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: iowap-org/iowap-server
+          path: iowap-server
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install relay server (in-process, no runtime)
+        run: pip install -e ./iowap-server
+      - name: api.md endpoint drift gate
+        run: python3 tools/check_api_routes.py --server ./iowap-server
