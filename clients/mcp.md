@@ -63,10 +63,9 @@ Typical loop: `capabilities_list` → pick capability + owning node ID →
 - **No destructive surface:** registration, wheel updates, capability
   publishing, daemon control, and token handling are deliberately not
   exposed. Those remain node-CLI operations for a human or a managed agent.
-- **Stdio only (v1):** tools run on the host that owns the node identity.
-  A remote (HTTP transport) variant would require a dedicated service node
-  identity — exposing the operator's node token to other machines is a leak
-  path, not a feature.
+- **Stdio only, by design:** the toolkit binds a **local** node to an AI agent
+  on the same host. There is deliberately no remote/HTTP transport — exposing
+  a node identity over the network is a leak path, not a feature.
 - MCP hosts filter the subprocess environment by default; the toolkit reads
   relay credentials from the node's on-disk identity and needs neither
   `--env` secrets nor relay URLs in the client config.
