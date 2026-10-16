@@ -16,6 +16,25 @@ offers update / override / uninstall:
 curl -fsSL https://raw.githubusercontent.com/iowap-org/iowap-server/main/install.sh | bash
 ```
 
+**Node one-liner** — installs the Python package **from PyPI by default**
+(dedicated venv, systemd user unit, relay pin/discovery + registration;
+re-runs offer update / override / uninstall; `IOWAP_SOURCE=git` switches to
+the git-clone dev path with `pip install -e .`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/iowap-org/iowap-node/main/install.sh | bash
+```
+
+**From PyPI (manual)** — plain pip; use a dedicated venv (the import
+namespace is the package dir `nodes`):
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install "iowap-node"
+```
+
+Live on the [Python Package Index](https://pypi.org/project/iowap-node/)
+since 2.3.20.
+
 **From source (manual)** — the node framework is its own repo, not part of
 iowap-server:
 
