@@ -49,7 +49,7 @@ stdio spawn (command `iowap-mcp`).
 | `relay_status` | Relay health, queue depth, task counters (unauth probe — works while the local node daemon is down) |
 | `node_list` | Fleet overview: node IDs, names, status, capabilities, load |
 | `capabilities_list` | All capabilities with `input_schema` **and** the node IDs that own each one |
-| `task_submit` | Submit a task (`payload` = the capability's schema; `owner_node_id` = a node ID, never a name); optional `wait_seconds` ≤ 90 |
+| `task_submit` | Submit a task (`payload` = the capability's schema; `owner_node_id` = a node ID, never a name; optional `name` labels the row); optional `wait_seconds` ≤ 90; auto-tracks the task on the desktop Tasks page (in-process, no extra bridge tool needed) |
 | `task_result` | Task state + result (first completed stage, envelope-unwrapped) |
 | `artifact_download` | Download a task artifact to an explicit local path (file existence verified) |
 | `docs` | The live documentation you are reading (list pages / read markdown) |
@@ -79,5 +79,8 @@ Typical loop: `capabilities_list` → pick capability + owning node ID →
 - **`node-cli not found`:** the resolution chain walks the node's
   `node_cli_path` pin → `PATH` → known install locations; install
   [iowap-node](https://github.com/iowap-org/iowap-node) first.
-- **`task_result` says `not_found`:** for owner-directed tasks this is
-  expected — only the owner node can read those results.
+- **`task_result` says `not_found`:** read scope is admin, the owner
+  node, or the sender (`submitted_by` — the node that submitted the
+  task). This node can always read back its own owner-directed
+  results; `not_found` means a genuinely different identity submitted
+  it (or the task is gone).
