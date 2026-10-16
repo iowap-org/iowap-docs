@@ -21,6 +21,9 @@
 - [concepts/observability](concepts/observability.md): /health /ready /metrics, trace_id, JSON logs
 - [concepts/security](concepts/security.md): boundary model, enforcement layer table
 
+## Agent clients (consumer side)
+- [clients/mcp](clients/mcp.md): MCP toolkit for agents — install, client wiring, 7-tool reference, security boundary
+
 ## Relay server (ops)
 - [server/setup](server/setup.md): install, session secret, master seed, systemd, TLS, config reference
 - [server/admin](server/admin.md): node approval/token/delete, recovery mode

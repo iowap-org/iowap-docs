@@ -14,6 +14,7 @@ to run a relay, connect a node, or build capabilities.
 | Build a capability / handler | [concepts/capabilities](concepts/capabilities.md) → [node/capabilities](node/capabilities.md) → [node/handlers/contract](node/handlers/contract.md) |
 | Automate my home | [node/integrations/home-assistant](node/integrations/home-assistant.md) |
 | Drive the fleet from an agent desktop | [node/integrations/hermes](node/integrations/hermes.md) |
+| Give any MCP-speaking agent a toolkit | [clients/mcp](clients/mcp.md) |
 | Script against the API | [reference/api](reference/api.md) |
 | Look up a term | [concepts/glossary](concepts/glossary.md) |
 
@@ -40,6 +41,8 @@ node/                         # Node operations + framework
 └── integrations/             #   home-assistant.md, hermes.md
 federation/                   # Cross-relay bridging — forward path ships, return leg open
 └── concept.md
+clients/                      # Consumer-facing client toolkits
+└── mcp.md                    #   MCP stdio toolkit for AI agents (clients/mcp)
 flow/                         # Orchestrator node (flow.run)
 └── runner.md                 #   deployment, catalog/history, submit+run flow.run
 storage/                      # NAS storage node
