@@ -17,15 +17,17 @@ resolves the binary via the node's own pin
 (`~/.relay/node.yaml` → `PATH` → known locations).
 
 ```bash
-pip install "iowap_client_mcp[mcp] @ https://github.com/iowap-org/iowap-client-mcp/releases/download/wheel-v0.1.0/iowap_client_mcp-0.1.0-py3-none-any.whl"
+pip install "iowap-client-mcp[mcp]"
 ```
 
-The `mcp` extra pulls the MCP SDK (the toolkit itself has no runtime
-dependencies). Verify:
+Live on the [Python Package Index](https://pypi.org/project/iowap-client-mcp/)
+since 0.1.1. Pinned alternatives live on the
+[releases tab](https://github.com/iowap-org/iowap-client-mcp/releases) of this
+repo's GitHub (wheel assets per release).
 
 ```console
 $ iowap-mcp --version
-0.1.0
+0.1.1
 ```
 
 ## Wire an MCP client
