@@ -92,6 +92,13 @@ per-domain exposure modes in the response. It always lists structure for
 No operational state values travel with it — per-entity state is
 `ha.state.get.native`.
 
+Architecture note: HA core has no REST registry endpoints (they are
+WebSocket-only), so the discovery data is **pushed, not proxied** — the
+iowap integration collects the registries natively in core and delivers
+the snapshot over the `app_stdin` channel (`kind: set_ha_structure`);
+the app persists it and `ha.info.native` serves that snapshot. A
+missing snapshot returns an actionable error: update the integration.
+
 ## Submitting tasks from HA
 
 **Service `iowap.submit_task`** — buffered in `/data/outbox.jsonl` (fsync
