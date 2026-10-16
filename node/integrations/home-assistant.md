@@ -76,12 +76,21 @@ entity scope and rate limit.
 | `ha.vacuum.start.native` | `vacuum.start` | `entity_id` |
 | `ha.vacuum.return_to_base.native` | `vacuum.return_to_base` | `entity_id` |
 | `ha.state.get.native` | state read (any domain) | `entity_id` |
+| `ha.info.native` | discovery: area + entity registry (any domain) | `area` optional filter (name/area_id substring) |
 | `ha.lock.lock.native` | `lock.lock` — **only with** `lock_level: write` | `entity_id` |
 | `ha.lock.unlock.native` | `lock.unlock` — **only with** `lock_level: write` | `entity_id` |
 
 `lock.open` does not exist and is rejected by design — opening a latch is
 never available through IOWAP. A task for a domain not exposed `on` fails
 with a clear deny reason (node log + handler metrics).
+
+`ha.info.native` is the discovery surface for agents: it answers *which
+areas and entities this node can see* — the registry structure, filtered
+by the same exposure/scope rules the execution path enforces, with the
+per-domain exposure modes in the response. It always lists structure for
+`readonly` domains too (reads are allowed there); `off` domains vanish.
+No operational state values travel with it — per-entity state is
+`ha.state.get.native`.
 
 ## Submitting tasks from HA
 
