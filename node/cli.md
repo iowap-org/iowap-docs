@@ -69,11 +69,15 @@ to the GitHub `wheel-vX.Y.Z` release when PyPI is unreachable; `--source
 pypi`/`--source github` pin strictly). `update check` reports both wheels
 (node + `iowap-client-mcp` when present); `update apply` upgrades them
 (the toolkit in **its own venv**, discovered via the `iowap-mcp` binary —
-a running MCP server reloads on the next client spawn, no restart needed)
-and restarts the node daemon after the wheel changed. Never run `apply`
-from a dev checkout/venv — the updater refuses editable installs
-(`direct_url.json` check) with a hint. `apply` with nothing to update is a
-clean no-op success (rc 0).
+PATH, `~/.local/bin`, well-known venv layouts, or the Hermes MCP
+registration — a running MCP server reloads on the next client spawn, no
+restart needed) and restarts the node daemon after the wheel changed.
+Two honesty guarantees: the updater refuses editable installs
+(`dir_info.editable` in `direct_url.json` — local-wheel installs stay
+updatable), and when pip resolves nothing despite a newer PyPI JSON (its
+simple index can lag PyPI's edge, TTL minutes) the result is a retriable
+failure, never a lying success. `apply` with nothing to update is a clean
+no-op success (rc 0).
 
 ## Verification
 
