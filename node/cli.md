@@ -63,9 +63,17 @@ the scriptable building block for submit→wait workflows.
 reference-api`) — the index shape and slug stability are a compatibility
 contract; list without argument shows every served page.
 
-**`update`:** wheel-based (`update check` → dry report; `update apply` →
-download newest release, reinstall, restart the service). Never run
-`apply` from a dev checkout/venv.
+**`update`:** self-update for the node **and** the installed MCP toolkit.
+Source: **PyPI by default** (`--source auto` = PyPI JSON API, falling back
+to the GitHub `wheel-vX.Y.Z` release when PyPI is unreachable; `--source
+pypi`/`--source github` pin strictly). `update check` reports both wheels
+(node + `iowap-client-mcp` when present); `update apply` upgrades them
+(the toolkit in **its own venv**, discovered via the `iowap-mcp` binary —
+a running MCP server reloads on the next client spawn, no restart needed)
+and restarts the node daemon after the wheel changed. Never run `apply`
+from a dev checkout/venv — the updater refuses editable installs
+(`direct_url.json` check) with a hint. `apply` with nothing to update is a
+clean no-op success (rc 0).
 
 ## Verification
 
