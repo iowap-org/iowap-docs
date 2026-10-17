@@ -26,6 +26,17 @@ offers update / override / uninstall:
 curl -fsSL https://raw.githubusercontent.com/iowap-org/iowap-server/main/install.sh | bash
 ```
 
+**From PyPI** — relay/server as a Python package:
+
+```bash
+pip install "iowap-server"
+```
+
+Live on the Python Package Index since 2.0.0 (import namespace:
+`relay_server`); console scripts `relay-server` (server/admin) and
+`relay-recovery` — or keep using the installer below, which owns the
+systemd/native setup.
+
 **From source (manual)**:
 
 ```bash

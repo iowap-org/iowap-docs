@@ -55,12 +55,21 @@ stdio spawn (command `iowap-mcp`).
 | `capabilities_list` | All capabilities with `input_schema` **and** the node IDs that own each one |
 | `task_submit` | Submit a task (`payload` = the capability's schema; `owner_node_id` = a node ID, never a name; optional `name` labels the row); optional `wait_seconds` ≤ 90; auto-tracks the task on the desktop Tasks page (in-process, no extra bridge tool needed) |
 | `task_result` | Task state + result (first completed stage, envelope-unwrapped) |
-| `artifact_download` | Download a task artifact to an explicit local path (file existence verified) |
+| `artifact_download` | Download a task artifact to an explicit local path (refuses to overwrite an existing file unless `overwrite: true`; file existence verified) |
 | `docs` | The live documentation you are reading (list pages / read markdown) |
 
 Typical loop: `capabilities_list` → pick capability + owning node ID →
 `task_submit(capability, payload, owner_node_id, wait_seconds=60)` → read
 `result`; poll `task_result` for long tasks.
+
+## Updates
+
+The toolkit is a regular PyPI package — a local node keeps it current for
+free: `node-cli update check` reports the node wheel AND this toolkit;
+`node-cli update apply` upgrades both (the toolkit in its own venv, no
+service restart — a running `iowap-mcp` process reloads on the next client
+spawn). Manual path: `pip install --upgrade iowap-client-mcp[mcp]`.
+PyPI versions are immutable: every toolkit change ships as a version bump.
 
 ## Security boundary
 
