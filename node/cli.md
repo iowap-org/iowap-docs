@@ -79,6 +79,15 @@ simple index can lag PyPI's edge, TTL minutes) the result is a retriable
 failure, never a lying success. `apply` with nothing to update is a clean
 no-op success (rc 0).
 
+**`mcp`** (`node-cli mcp install` / `node-cli mcp status`): installs and
+verifies the MCP toolkit (`iowap-client-mcp`) into its own venv from PyPI
+(default `~/iowap-client-mcp/.venv`, `--venv`/`IOWAP_MCP_VENV` to place it)
+and reports the stdio command path as data — `status` shows discovery +
+installed/PyPI versions read-only. Client-neutral by design: no wiring
+into any MCP client happens here (Hermes, Codex, … register the command
+path themselves). The toolkit stays visible to `update check/apply` via
+the same discovery chain.
+
 ## Verification
 
 ```bash
