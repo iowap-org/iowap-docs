@@ -62,15 +62,23 @@ Typical loop: `capabilities_list` → pick capability + owning node ID →
 
 ## Security boundary
 
+- **Trust model:** whoever can launch `iowap-mcp` on the host acts with the
+  node's identity — an MCP client that spawns this server is a trusted
+  executor. Environment filtering of the stdio subprocess is host behavior
+  (Hermes does it); the package relies on the node's on-disk identity and
+  enforces none of it itself.
 - **No destructive surface:** registration, wheel updates, capability
   publishing, daemon control, and token handling are deliberately not
   exposed. Those remain node-CLI operations for a human or a managed agent.
+- **Narrowable execution:** operators can restrict which capabilities
+  `task_submit` may fire with `IOWAP_ALLOW_CAPS=cap.one,cap.two` (csv env;
+  unset means all published capabilities).
+- **`artifact_download` writes a file:** it refuses to overwrite an existing
+  path unless `overwrite: true` is passed.
 - **Stdio only, by design:** the toolkit binds a **local** node to an AI agent
   on the same host. There is deliberately no remote/HTTP transport — exposing
-  a node identity over the network is a leak path, not a feature.
-- MCP hosts filter the subprocess environment by default; the toolkit reads
-  relay credentials from the node's on-disk identity and needs neither
-  `--env` secrets nor relay URLs in the client config.
+  a node identity over the network is a leak path, not a feature. POSIX host
+  (Linux/macOS) — no Windows support.
 
 ## Troubleshooting
 
