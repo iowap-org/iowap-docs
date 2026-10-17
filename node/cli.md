@@ -100,6 +100,7 @@ node-cli server health --json
 
 ## Related pages
 
+- [reference](../reference/cli.md) — every command/flag, parser-generated
 - [setup](setup.md) — install, register, first daemon
 - [operations](operations.md) — daemon variants, maintenance, backoff
 - [capabilities how-to](capabilities.md) — profiles behind `capabilities` commands
