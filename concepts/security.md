@@ -31,6 +31,13 @@ overlays). The boundaries:
   loopback, link-local and cloud-metadata targets are refused (fail-closed,
   HTTP 502) — the relay cannot be turned into an open proxy into its own
   network.
+- **Agent-facing MCP clients act with the host's node identity.** The
+  optional MCP toolkit ([clients/mcp](../clients/mcp.md)) wraps the installed
+  `node-cli`: whoever may launch `iowap-mcp` on the host holds the node's
+  credentials — treat its launcher as part of the node trust boundary. Its
+  file-writing tool writes where the caller points, so the MCP process's
+  filesystem scope is part of the agent trust boundary. Capabilities can be
+  allowlisted per launch (`IOWAP_ALLOW_CAPS`).
 - **Keep the relay behind your firewall.** Auth-failure counters are
   exported on `/metrics`; protected routes answer 401 without a valid
   token.
@@ -48,6 +55,7 @@ The enforcement points, in one list:
 | Registration | No port-opening: nodes register and heartbeat outbound only |
 | Node file serve | Source-IP allowlist, deliberate bind host, fail-closed |
 | Dynamic routes | Upstream allowlist + endpoint-origin check, no `DELETE` proxy |
+| MCP client (iowap-mcp) | Local stdio: host node identity, optional `IOWAP_ALLOW_CAPS` cap allowlist, artifact-write path refusal rules |
 | Scheduler | Exact capability match; `available`/`busy` claim gates |
 | Artifacts | Watchdog-purged transient store, no durable relay-side copies |
 

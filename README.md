@@ -83,8 +83,13 @@ path relative to `docs/`, `/` joined with `-`.
 | Relay Server | [iowap-org/iowap-server](https://github.com/iowap-org/iowap-server) |
 | Node Framework | [iowap-org/iowap-node](https://github.com/iowap-org/iowap-node) |
 | Storage Node | [iowap-org/iowap-storage](https://github.com/iowap-org/iowap-storage) |
-| Docker Images | [iowap-org/iowap-docker](https://github.com/iowap-org/iowap-docker) |
+| Flow Runner (orchestrator node) | [iowap-org/iowap-flow](https://github.com/iowap-org/iowap-flow) |
+| Home Assistant App | [iowap-org/iowap-ha](https://github.com/iowap-org/iowap-ha) |
+| Federation Node (cross-relay) | [iowap-org/iowap-federation](https://github.com/iowap-org/iowap-federation) |
+| MCP Agent Client | [iowap-org/iowap-client-mcp](https://github.com/iowap-org/iowap-client-mcp) |
 | Hermes Integration | [iowap-org/iowap-hermes-integration](https://github.com/iowap-org/iowap-hermes-integration) |
+| Docker Images | [iowap-org/iowap-docker](https://github.com/iowap-org/iowap-docker) |
+| Documentation | [iowap-org/iowap-docs](https://github.com/iowap-org/iowap-docs) |
 
 ## License
 
