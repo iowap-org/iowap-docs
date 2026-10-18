@@ -13,6 +13,7 @@
 ## Concepts (model)
 - [concepts/nodes](concepts/nodes.md): node model, heartbeat, statuses, busy mode
 - [concepts/capabilities](concepts/capabilities.md): routing keys, naming suffixes, transfer ladder, dynamic routes intro
+- [concepts/forward-routing](concepts/forward-routing.md): node-to-capability delegation via forward slots (configurable redirect)
 - [concepts/tasks](concepts/tasks.md): task/stage lifecycle, status registry, failure policy, leases/orphans
 - [concepts/flow](concepts/flow.md): flows — dumb-Kanban orchestration (plan → fan-out → join), data injection, catalog
 - [flow/runner](flow/runner.md): flow runner deploy + submit/run + troubleshooting
