@@ -98,6 +98,22 @@ node's own endpoint origin or the server allowlist are refused, loopback
 and link-local targets always. Details:
 [routes in the CLI reference](../node/cli.md), [storage bridge](../storage/storage.md).
 
+### Forward routing
+
+`forward` is a relay-side pseudo-capability that a node never advertises and
+never claims. A submitter numbers its own forward slots: an admin maps each
+slot to a real capability (`(node_id, slot) → target_capability`, stored in
+the `forward_mappings` table), and a stage submitted with
+`capability: "forward"` plus `payload.forward_slot` is rewritten to its
+mapped target at submit time — the task keeps one ID, the stage becomes a
+normal claim against the target capability, and only nodes advertising that
+exact capability can claim it. The submitter stays `submitted_by`, and the
+claiming node becomes `owner_node_id` (the sender/owner visibility model).
+Unmapped or malformed slots are refused with a 4xx; mappings are managed on
+the [API](../reference/api.md) and from the node's profile page in the
+[dashboard](../server/dashboard.md). Details: [Forward
+routing](forward-routing.md).
+
 ### File transfer ladder
 
 A capability that accepts or serves files declares which modes it

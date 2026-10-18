@@ -53,6 +53,9 @@ capabilities (may change at runtime), and last-seen. Actions:
 - **New token** for a node whose token leaked or expired — invalidates the
   previous one
 - **Delete** — removes the record, tokens, presence, routes, and claims
+- **Forward mappings** on the node's profile page — per-node slots that map
+  `forward`-numbered stages to a target capability (admin-only; concept:
+  [forward routing](../concepts/forward-routing.md))
 
 Status meanings and the auto-busy rules: [tasks and statuses](../concepts/tasks.md).
 
@@ -80,6 +83,9 @@ well (full table: [API reference](../reference/api.md)):
 | POST | `/relay/v2/admin/nodes/{id}/approve` | Approve node |
 | POST | `/relay/v2/admin/nodes/{id}/token` | Issue runtime token |
 | DELETE | `/relay/v2/admin/nodes/{id}` | Delete node |
+| GET | `/relay/v2/forward-mappings?node={id}` | List the node's forward mappings |
+| PUT | `/relay/v2/forward-mappings/{id}/{slot}` | Create/update a forward mapping slot |
+| DELETE | `/relay/v2/forward-mappings/{id}/{slot}` | Delete a forward mapping slot |
 
 ## Security best practices
 

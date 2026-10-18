@@ -73,6 +73,45 @@ and read-only task routes stay approved/online-only (a `403` there can
 mean "busy"). Policies per entity:
 [tasks](../concepts/tasks.md).
 
+Submitting `capability: "forward"` with `payload.forward_slot` requires a
+forward mapping for the submitting node — see
+[Forward routing](#forward-routing-relayv2forward-mappings); unmapped or
+malformed slots are refused with a 4xx on both submit routes, and the
+`task-simple` response echoes the resolved target capability.
+
+## Forward routing — `/relay/v2/forward-mappings`
+
+Mappings are configured per submitter node: each slot of a node resolves to
+a target capability. A task stage with `capability: "forward"` is resolved
+at submit time (a submit-time rewrite, one task ID) against the
+submitter's mapping. See [Forward routing](../concepts/forward-routing.md)
+for the concept and [Capabilities](../concepts/capabilities.md) for how
+`forward` sits among the pseudo-capabilities. All three routes require an
+admin role (admin node token, human admin session or the master user).
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/relay/v2/forward-mappings` | admin | List mappings; optional `?node=<node_id>` filter (validated against registered nodes) |
+| PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…"}` |
+| DELETE | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Delete one mapping |
+
+`GET` rows carry `node_id`, `slot`, `target_capability`, `created_at`,
+`updated_at`. `PUT` is an upsert: an existing `(node_id, slot)` keeps its
+`created_at`, gets its `updated_at` bumped, and stores the new target.
+Both mutations write an audit entry (`forward.mapping_upsert` /
+`forward.mapping_delete`).
+
+Error codes (the API detail string is always `<code>: <message>`):
+
+| HTTP | Code | Raised when |
+|---|---|---|
+| 422 | `forward_mapping_missing` | submit: `(node, slot)` not configured; DELETE: mapping absent |
+| 422 | `forward_mapping_invalid` | slot empty, whitespace-only, oversized, disallowed characters, or a mapping target that points at `forward` |
+| 404 | `forward_node_unknown` | the submitter node is not registered (also an unknown `?node=` filter on `GET`) |
+| 422 | `target_unknown_capability` | `PUT`: the target capability is not in the capability catalog |
+| 400 | `redirect_self` | `PUT`: the target capability is `forward` |
+| 403 | `Admin role required` | any mapping route called without an admin context |
+
 ## Presence — `/relay/v2/presence`
 
 | Method | Path | Auth | Purpose |
@@ -91,11 +130,14 @@ The bus publishes: `task_created`, `task_completed`, `task_failed`,
 `stage_claimed`, `stage_completed`, `stage_failed`, `status_changed`
 (payload `{entity_type, entity_id, old_status, new_status}`),
 `node_online`, `node_offline`, `presence_changed`, `artifact_created`,
-`artifact_deleted`.
+`artifact_deleted`, `forward_refused` (payload
+`{node_id, slot, reason}` — a `forward` submit was refused, see
+[Forward routing](#forward-routing-relayv2forward-mappings)).
 
 Server-side filtering via `types` is **whitelisted** and narrower:
 `node_online`, `node_offline`, `task_created`, `stage_claimed`,
-`stage_completed`, `presence_changed`, `artifact_created` — any other
+`stage_completed`, `presence_changed`, `artifact_created`,
+`forward_refused` — any other
 value answers `400 Unknown event types`. The filtered stream is meant for
 daemon-style consumers; everything else arrives unfiltered.
 
@@ -341,6 +383,36 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks" \
 Errors: `422` (payload > max, priority out of 0–10); `404` unknown
 capability (task-simple) or unknown `depends_on` id. task-simple queues
 pending while the capability is busy (T-229) — no 503.
+
+### Forward routing
+
+```bash
+# Admin: map slot "1" of the submitter to the agent.ai capability.
+curl -s -X PUT "http://${RELAY_HOST}:8788/relay/v2/forward-mappings/<submitter_id>/1" \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"target_capability": "agent.ai"}' | jq
+# -> {"node_id": "<submitter_id>", "slot": "1", "target_capability": "agent.ai",
+#     "created_at": "...", "updated_at": "..."}
+
+# Submitter: a forward task is resolved against the submitter's mapping
+# at submit time — no second task, no re-submission.
+curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/task-simple" \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"capability": "forward", "payload": {"forward_slot": "1"}}' | jq
+# -> {"capability": "agent.ai", "status": "pending", "task_id": "...", ...}
+
+curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/claim" \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"capability": "agent.ai"}' | jq
+# -> {"claimed": true, "stage": {...}} — owner_node_id flips to the
+#    claiming node; submitted_by stays the submitter.
+
+# Unmapped slots are refused, never silently queued:
+curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/task-simple" \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"capability": "forward", "payload": {"forward_slot": "9"}}'
+# -> 422 {"detail": "forward_mapping_missing: no mapping for node '<id>' slot '9'"}
+```
 
 ### Upload / download an artifact
 
