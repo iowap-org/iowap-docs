@@ -176,6 +176,80 @@ node-cli route list    # only this node's own routes
 The full storage-channel flow (who calls what, streaming hop by hop):
 [storage](../storage/storage.md).
 
+## Forward slots (forward routing)
+
+A node sometimes needs a dependency it cannot name: it only knows
+"my slot 2 must be processed". Forward routing (T-Forward) solves this —
+the task is submitted against the relay's `forward` pseudo-capability and
+carries a node-local **slot**; the relay resolves
+`(this node, slot) → target capability` from its forward-mapping table
+(operator-configured in the dashboard) and redirects the task submit-time.
+The client never names the target capability, and the redirect never
+changes the resulting `task_id`.
+
+Slot numbers are **per-node only**: `1` on your node and `1` on another
+node may mean different things. Keep your node's numbering as operational
+notes (node-side only, no config schema — the block below is NOT read,
+validated, or heartbeated anywhere):
+
+```yaml
+# node-side only, operational notes — does NOT get heartbeated
+forward_slots:
+  1: agent-decision        # maintenance decision
+  2: artifact-processing   # storage archive
+  3: knowledge-summarize   # flow builder helper
+```
+
+Rules:
+
+- Slots never leave the node's own bookkeeping: the node never converts a
+  slot into a capability name and never advertises anything for it.
+- The `forward` pseudo-capability is **never advertised** by a node: a
+  profile declaring a capability named `forward` is rejected by
+  `node-cli capabilities validate` / `publish`.
+- Heartbeat, handlers, and the daemon are untouched — a redirected task
+  behaves like any normal task of the resolved target. The claiming
+  handler receives the **resolved** capability and a payload without the
+  slot (the relay strips `forward_slot` on redirect).
+
+### Usage
+
+```bash
+# "I need my dependency 2" — the relay resolves the target capability:
+node-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
+```
+
+`--forward-slot` replaces the `--stage` capability with `forward` and
+carries the slot inside the payload (`"forward_slot": "2"`). The same
+works without the flag by submitting capability `forward` with a
+`forward_slot` key in the stage payload; an explicit `--forward-slot`
+wins over a payload-carried key.
+
+Slots are strings: numeric (`2`) or lexical (`a…z`, `arch-1` style),
+1..64 chars from `A-Za-z0-9_-` (no whitespace, no dots). The task-simple
+one-liner flow supports the flag.
+
+### Relay refusals (surfaced verbatim, never retried)
+
+The CLI prints the relay's error body verbatim, adds an actionable hint
+for the codes below, and exits `1` — forward refusals are configuration
+problems, so they are never retried automatically.
+
+| Error | Meaning | Fix |
+|---|---|---|
+| `422 forward_mapping_missing` | no mapping for `(node, slot)` | open the relay dashboard (node profile → Forward mappings) and configure the mapping |
+| `422 forward_mapping_invalid` | slot malformed/too long | do **not** retry — fix the slot value or the mapping |
+| `404 forward_node_unknown` | submitter node not registered | `node-cli node register` again |
+| `422 target_unknown_capability` | mapping target not in the capability catalog | stale mapping — ask the operator to update it |
+| `400 redirect_self` | mapping points at `forward` itself | operator must fix the mapping target |
+
+Against an older relay (pre-forward-routing) a forward submit fails with
+`404 Capability 'forward' not found` — the client has no feature flag for
+this; the message is self-explanatory.
+
+The server-side story (mapping management, semantics, dashboard UI):
+[Forward routing concepts](../concepts/forward-routing.md).
+
 ## Verification
 
 ```bash

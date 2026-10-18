@@ -88,6 +88,24 @@ into any MCP client happens here (Hermes, Codex, … register the command
 path themselves). The toolkit stays visible to `update check/apply` via
 the same discovery chain.
 
+## Forward submission
+
+`node-cli task submit` accepts `--forward-slot <slot>` (T-Forward): the
+`--stage` capability is replaced by the relay's `forward`
+pseudo-capability and the slot rides in the payload; the relay resolves
+`(this node, slot) → target capability` from its forward-mapping table and
+redirects submit-time — the `task_id` is returned as before. Relay
+refusals are printed verbatim with an actionable hint and exit `1`; they
+are never retried (bad configuration must be fixed). Slots: 1..64 chars
+of `A-Za-z0-9_-`, per-node only. Never declare a `forward` capability in
+a profile — the validator rejects it. Slot bookkeeping, rules and the
+full refusal table: [capabilities how-to → Forward slots](capabilities.md#forward-slots-forward-routing).
+
+```bash
+node-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
+# -> {"task_id": "T-…", "stage_id": "…", "status": "pending"}
+```
+
 ## Verification
 
 ```bash

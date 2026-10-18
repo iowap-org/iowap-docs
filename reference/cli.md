@@ -97,6 +97,7 @@ Submit a single-stage task.
 | `--stage` | Stage as <capability>:<json-payload>. |
 | `--priority` | Task priority 0-10. |
 | `--owner` | Node ID that must claim this task (owner_node_id). |
+| `--forward-slot <slot>` | Submit against the relay's 'forward' pseudo-capability: replaces the --stage capability with 'forward' and carries the slot in the payload; the relay resolves (this node, slot) -> target capability via its forward mappings (slots are per-node, 1..64 chars of A-Za-z0-9_-). |
 
 #### `task result`
 
