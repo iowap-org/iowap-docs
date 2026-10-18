@@ -9,11 +9,11 @@ the docs task; regenerate = `python3 gen-cli-reference.py`).
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, os.environ.get("IOWAP_NODE_REPO", str(Path.home() / "projects/iowap-node")))
-import os  # noqa: E402
 
 from nodes.common import node_cli  # noqa: E402
 
