@@ -154,61 +154,108 @@ hour*, regardless of how long the task then runs.
 
 ## Roadmap
 
-The path is driven by one constraint: **a federation node that cannot
-express *who may use what* is not usable in production.** The transport
-has to work first, then the trust model has to be explicit, and only then
-can the topology grow.
+The path has one rule: **every step ends in a test, and a step is not done
+until that test passes.** Each step below names what has to be true
+before moving on — the test, not the intent, is the milestone.
 
-### 1. One real transport (T-112, T-100)
+The ordering is driven by one constraint: *a federation node that cannot
+express **who may use what** is not usable in production.* But before
+trust can be expressed, two nodes have to be able to talk to each other at
+all — and today they cannot do that without the operator copying keys by
+hand. So the path starts with the connection, not with the transport.
+
+### 1. Handshake and capability heartbeat
+
+Two federation nodes currently do not introduce themselves. The operator
+generates a keypair on one side, copies the public key into the other's
+configuration by hand, and the listener still authenticates with a bearer
+token from a configured list. There is no handshake, and the only message
+types are *task* and *result* — no message type exists that says "hello,
+here is who I am and what I have".
+
+**What step 1 adds:**
+
+- **A handshake between FedNode A and FedNode B** — a key exchange. The
+  public keys are exchanged and pinned, so the pairing no longer depends
+  on the operator moving bytes between two configurations by hand. The
+  handshake is authenticated: it is the first thing that must not be
+  forgeable, because everything after it inherits its result.
+- **A regular capability exchange** — afterwards, and on a fixed
+  interval, the two nodes exchange what they can do. This heartbeat
+  carries the capabilities, the routes they are reachable under, and the
+  grant state, and it travels **encrypted**, like every other message on
+  the channel. It is the same channel as the tasks, not a second one.
+- **The exchange is what the grant model needs.** A grant names a
+  capability towards a particular side; both sides have to know the same
+  capability set for that to mean anything.
+
+**Where it lands:**
+
+- *Fed-side (federation node)* — a handshake message type, a key-pinning
+  store, the capability-exchange heartbeat, and the transport-independent
+  channel it rides on.
+- *Node-side (the node framework)* — the node's own configuration gains
+  the federation pairing and the keys, and the node reports the pairing
+  state the way it reports everything else.
+- *Server-side (the relay)* — the relay does not participate in the
+  handshake. It stays the place where a pairing is *permitted* and where
+  a grant is *recorded*; it never sees the handshake or the capability
+  exchange itself. The relay's part is to carry the administrative state:
+  who is paired with whom, and what is released.
+
+**Test before moving on:** two federation nodes, configured against each
+other, complete a handshake, exchange capabilities encrypted, and a
+capability granted on one side shows up on the other — with no manual key
+copy anywhere in the setup.
+
+### 2. One real transport, and encryption in the envelope (T-112, T-100, T-111)
 
 The transport is the reason the whole thing exists — an asynchronous
 channel that moves an encrypted attachment. Today only the HTTP path
-exists, and it is the one path that does not demonstrate the point. The
-wrapper contract comes first, then one transport that is genuinely
-asynchronous (e-mail or a shared folder) proves the model: the node
+exists, and it is the one path that does not demonstrate the point.
+
+The wrapper contract comes first, then one genuinely asynchronous
+transport (e-mail or a shared folder) proves the model: the node
 addresses `<transport>~<recipient>`, the transport moves opaque bytes, and
 the node never needs to know what is inside.
 
-*Milestone: a task reaches a remote node over a channel that has no
-API.*
-
-### 2. Encryption in the envelope (T-111)
-
-Asynchronous transports break the current encryption placement. The
-message is written in plaintext and encrypted only when it leaves the
-transport, so on a store-and-forward channel the file is readable in
-transit. The encryption has to move to the envelope — the node writes the
-outbox already encrypted — and the transport stays blind.
+That forces the encryption to move. The message is encrypted when it
+*leaves the transport* today, so on a store-and-forward channel the file
+is readable in transit — the encryption has to belong to the envelope, and
+the node has to write the outbox already encrypted.
 
 The scheme has to change with it. The current one is a symmetric
 key-agreement scheme: both sides must already know each other's keys,
 which is exactly what an asynchronous channel cannot assume. A
 recipient-keyed format is the natural fit for a channel where the sender
-knows the recipient's public key and nothing else.
+knows the recipient's public key and nothing else — and the handshake from
+step 1 is what makes such a key available in the first place.
 
 This is also what makes the size limits work: an encrypted format that
 streams has no payload ceiling of its own, so the limit can live in the
 transport manifest where it belongs instead of being dictated by the
 crypto layer.
 
-*Milestone: the outbox file on disk is unreadable without the recipient's
-key.*
+**Test before moving on:** a task reaches a remote node over a channel
+with no API, and the file sitting in the transport is unreadable without
+the recipient's key.
 
-### 3. Namespacing
+### 3. Namespacing, and pinning with it
 
 Capability names imported from a remote side must not collide with local
 ones. This is specified above but not implemented, and it blocks the next
 step: until `image.mflux` from a remote and a local `image.mflux` are
 different names, a node cannot offer both.
 
-The interface fingerprint that makes drift detectable travels alongside the
-capability and is already carried in the envelope — what is missing is the
-*check* that compares it against the expected shape. So namespacing and
-pinning are one piece of work: a capability has to be addressable
+The interface fingerprint that makes drift detectable travels alongside
+the capability and is already carried in the envelope — what is missing is
+the *check* that compares it against the expected shape. So namespacing
+and pinning are one piece of work: a capability has to be addressable
 uniquely before its shape can be guarded.
 
-*Milestone: importing a capability never shadows a local one, and a
-changed shape is detected instead of silently misused.*
+**Test before moving on:** importing a capability never shadows a local
+one, and a remote capability whose shape changed is rejected rather than
+silently misused.
 
 ### 4. Grants — who may use what
 
@@ -217,8 +264,6 @@ The trust model, described in
 three owners: the node operator **exposes** a capability, the server
 operator **grants** it to a particular side with limits, the receiving
 node operator **subscribes** to it. All three must agree.
-
-The grant model is decided; the work is not yet broken into board rows.
 
 Two properties make this tractable:
 
@@ -229,8 +274,10 @@ Two properties make this tractable:
   the node declares, the server assigns, the node enforces. The pattern
   is proven in the product.
 
-*Milestone: a capability can be offered to one side with a limit, and
-neither side can widen that limit on its own.*
+The grant model is decided; the work is not yet broken into board rows.
+
+**Test before moving on:** a capability can be offered to one side with a
+limit, and neither side can widen that limit on its own.
 
 ### 5. The asynchronous return leg
 
@@ -242,8 +289,8 @@ store-and-forward channel the result has to travel back as its own
 message, and the node has to pick it up whenever it arrives — not in
 reply to a request it is still waiting for.
 
-*Milestone: a forwarded task returns its result over the same
-asynchronous channel, whenever it arrives.*
+**Test before moving on:** a forwarded task returns its result over the
+same asynchronous channel, whenever it arrives.
 
 ### 6. Growth (T-104, T-105, T-106, T-107)
 
@@ -260,17 +307,20 @@ interesting:
 - **Channel model / gateway** (T-107) — a federation node as an open
   gateway rather than a relay bridge.
 
-*Milestone: a node can find and reach capabilities across a mesh, under an
-explicit grant.*
+**Test before moving on:** a node can find and reach capabilities across a
+mesh, under an explicit grant.
 
 ### What is deliberately not on the path
 
 - **Automatic trust** is never on the path, at any step.
 - **A relay-to-relay protocol** is never on the path — the relays stay
-  clueless by construction.
+  clueless by construction, and the handshake happens between nodes, not
+  between relays.
 - **A universal channel model** (T-107) is last, not first: the channel
   abstraction exists so the *grant* model can be transport-independent,
   not so every channel can be supported.
+- **The relay does not join the handshake** — it records permissions and
+  grants, it does not introduce nodes to each other.
 
 ## What it is NOT (even once implemented)
 
