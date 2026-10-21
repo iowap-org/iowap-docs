@@ -173,9 +173,9 @@ trust can be expressed, two nodes have to be able to talk to each other at
 all — and today they cannot do that without the operator copying keys by
 hand. So the path starts with the connection, not with the transport.
 
-### 1. The address model, and the handshake
+### 1. The address model, and the handshake (T-118, T-113, T-114)
 
-**First the address model changes.** A node currently knows *peers* — a
+**First the address model changes (T-118).** A node currently knows *peers* — a
 configured remote endpoint with a token. It should know *recipients*: a
 person addressable over several transports, each with its own route, with
 one key belonging to the person rather than to the transport. The peer
