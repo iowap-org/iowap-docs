@@ -49,7 +49,7 @@
 - [storage/qnap](storage/qnap.md): QNAP Container Station deployment
 
 ## Federation (V1 forward path implemented; result return leg open)
-- [federation/concept](federation/concept.md): cross-relay bridging (two-sided model, namespacing, status)
+- [federation/concept](federation/concept.md): cross-relay bridging (two-sided model, node tail vs worker part, transports as channels, grant model, namespacing, status)
 
 ## Reference (look-up)
 - [reference/api](reference/api.md): endpoint tables (auth/discovery/scheduler/storage/routes/dashboard/admin/docs) + worked cURL examples
