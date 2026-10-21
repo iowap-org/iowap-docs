@@ -173,14 +173,24 @@ trust can be expressed, two nodes have to be able to talk to each other at
 all — and today they cannot do that without the operator copying keys by
 hand. So the path starts with the connection, not with the transport.
 
-### 1. Handshake and capability heartbeat
+### 1. The address model, and the handshake
 
-Two federation nodes currently do not introduce themselves. The operator
-generates a keypair on one side, copies the public key into the other's
-configuration by hand, and the listener still authenticates with a bearer
-token from a configured list. There is no handshake, and the only message
-types are *task* and *result* — no message type exists that says "hello,
-here is who I am and what I have".
+**First the address model changes.** A node currently knows *peers* — a
+configured remote endpoint with a token. It should know *recipients*: a
+person addressable over several transports, each with its own route, with
+one key belonging to the person rather than to the transport. The peer
+concept goes away entirely, and the transport that used to be tied to a
+peer becomes a plain wrapper over a directory.
+
+That change is a precondition, not a detail: everything below addresses
+recipients, and the handshake needs a key that belongs to a recipient.
+
+**Then the handshake.** Two federation nodes currently do not introduce
+themselves. The operator generates a keypair on one side, copies the public
+key into the other's configuration by hand, and the listener still
+authenticates with a bearer token from a configured list. There is no
+handshake, and the only message types are *task* and *result* — no message
+type exists that says "hello, here is who I am and what I have".
 
 **What step 1 adds:**
 
@@ -283,7 +293,9 @@ Two properties make this tractable:
   the node declares, the server assigns, the node enforces. The pattern
   is proven in the product.
 
-The grant model is decided; the work is not yet broken into board rows.
+The grant model is decided and broken into board rows: the federation side
+carries the handshake, the capability exchange, the grants themselves and the
+namespacing; the relay side carries the pairing and the grant bookkeeping.
 
 **Test before moving on:** a capability can be offered to one side with a
 limit, and neither side can widen that limit on its own.
