@@ -106,26 +106,35 @@ its own federation node. That keeps the relay clueless by construction and
 makes federation a **two-sided consent** without a central arbiter.
 
 ```
-NovaForge A        FedNode A        Server A        FedNode B        Server B
-     │                  │                │               │                │
-     │ image.mflux      │ "I offer this, │               │                │
-     │ released for fed │  I know        │               │                │
-     ├─────────────────►│  cluster B"    │               │                │
-     │                  ├───────────────►│               │                │
-     │                  │                │ admin grants │                │
-     │                  │                │ image.mflux  │                │
-     │                  │                │ → cluster B, │                │
-     │                  │                │ 1 task/hour  │                │
-     │                  │◄───────────────┤               │                │
-     │                  │ "what is       │               │                │
-     │                  │  released, for │               │                │
-     │                  │  whom?"        │               │                │
-     │                  ├──────────────────────────────►│                │
-     │                  │                │               │ "image.mflux?" │
-     │                  │                │               ├───────────────►│
-     │                  │                │               │                │ admin B
-     │                  │                │               │                │ subscribes
-     │                  │                │               │◄───────────────┤
+ NovaForge A          Server A            FedNode A           FedNode B           Server B
+      │                   │                   │                   │                   │
+      │ image.mflux       │                   │                   │                   │
+      │ released for fed  │                   │                   │                   │
+      │───────────────────►                   │                   │                   │
+      │                   │ "I offer this,    │                   │                   │
+      │                   │  I know           │                   │                   │
+      │                   │  cluster B"       │                   │                   │
+      │                   ◄───────────────────│                   │                   │
+      │                   │ admin grants      │                   │                   │
+      │                   │ image.mflux       │                   │                   │
+      │                   │ → cluster B,      │                   │                   │
+      │                   │ 1 task/hour       │                   │                   │
+      │                   │          "what is │                   │                   │
+      │                   │     released, for │                   │                   │
+      │                   │            whom?" │                   │                   │
+      │                   ◄───────────────────│                   │                   │
+      │                   │ image.mflux →     │                   │                   │
+      │                   │ cluster B,        │                   │                   │
+      │                   │ 1 task/hour       │                   │                   │
+      │                   │───────────────────►                   │                   │
+      │                   │                   │───────────────────►                   │
+      │                   │                   │                   │ "image.mflux?"    │
+      │                   │                   │                   │───────────────────►
+      │                   │                   │                   │                   │ admin B
+      │                   │                   │                   │                   │ subscribes
+      │                   │                   │                   ◄───────────────────│
+      │                   │                   │                   │ available         │
+      │                   │                   │                   │ in cluster B      │
 ```
 
 Three decisions, three owners — the effective rule is their intersection:
