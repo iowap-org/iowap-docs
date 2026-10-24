@@ -53,12 +53,48 @@ and `forward` is never advertised in a node's capabilities.
 
 Worked cURL examples: [the API reference](../reference/api.md#forward-routing).
 
+## Typed slots
+
+Since migration 16 a declared slot carries a **type**. The declaration is
+node-owned metadata: a node heartbeats its `forward_slots` entries (see
+[node config](../node/config.md#forward-slots)) and the relay validates and
+stores them. The registry is exactly `forward`, `text` and `bool`; an
+absent `type` resolves to `forward`, so pre-typed-slot declarations keep
+working unchanged.
+
+- **`forward`** — the classic routing handle: no `value` (the target lives
+  in `forward_mappings`), no refs; `input_schema` is allowed as a
+  structure-only dict (its contents stay unvalidated until the T-247
+  payload contract exists).
+- **`text` / `bool`** — value slots. A `text` value must be a string, a
+  `bool` value a real boolean (`"true"` / `1` are refused — no coercion).
+  Value slots may declare a **ref** as a whole pair (`ref_slot` +
+  `ref_field`); the referenced slot must be a `forward` slot of the same
+  declaration (value slots are never referable, so refs cannot cycle).
+- Types are matched exactly (trimmed, case-sensitive): unknown, empty or
+  mis-typed values are a loud `422 forward_slot_invalid`. A rejected
+  declaration never touches existing rows — validation runs before the
+  store is replaced, and the heartbeat stays `200` (swallow-and-log).
+
+### Submit gate
+
+A submit against a slot explicitly declared `text` or `bool` is refused
+with `422 forward_slot_not_routable` **before** mapping resolution — a
+value slot has no routing target by definition, so the error names the
+declared type as the real cause. Undeclared slots and legacy rows without
+a stored type keep routing unchanged. The refusal carries no
+`forward_refused` event: gate refusals are configuration errors (the
+declaration needs a fix on the node), not runtime refusals.
+
 ## Relating events and errors
 
 A refused slot submit is visible on the event bus as `forward_refused`
 (payload `node_id`, `slot`, `reason`). Submit-side error codes are
 `forward_mapping_missing` (422), `forward_mapping_invalid` (422) and
-`forward_node_unknown` (404); mapping-management errors are
+`forward_node_unknown` (404); typed-slot codes add
+`forward_slot_not_routable` (422, submit against a declared value slot —
+no `forward_refused` event) and the declaration-side `forward_slot_invalid`
+(422, heartbeat-scoped). Mapping-management errors are
 `target_unknown_capability` (422) and `redirect_self` (400). The full table:
 [API reference](../reference/api.md#forward-routing-relayv2forward-mappings).
 

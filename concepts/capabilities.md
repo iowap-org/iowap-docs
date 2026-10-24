@@ -111,7 +111,10 @@ exact capability can claim it. The submitter stays `submitted_by`, and the
 claiming node becomes `owner_node_id` (the sender/owner visibility model).
 Unmapped or malformed slots are refused with a 4xx; mappings are managed on
 the [API](../reference/api.md) and from the node's profile page in the
-[dashboard](../server/dashboard.md). Details: [Forward
+[dashboard](../server/dashboard.md). Slots may declare a typed kind:
+`forward` (the default) routes as before, while `text`/`bool` value slots
+carry a value and are refused as a routing target
+(`forward_slot_not_routable`). Details: [Forward
 routing](forward-routing.md).
 
 ### File transfer ladder

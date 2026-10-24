@@ -43,6 +43,46 @@ Full field reference (type, claimable, handler, max_parallel, timeout,
 input_schema, upload_modes, config): [capabilities how-to](capabilities.md),
 model: [concept: capability](../concepts/capabilities.md).
 
+### Forward slots
+
+Node-owned forward-slot metadata, delivered with every heartbeat. The
+classic form declares plain routing handles; typed declarations (server
+since migration 16) add `type`, `value`, `ref` and `input_schema` —
+semantics and submit gate:
+[forward routing](../concepts/forward-routing.md#typed-slots):
+
+```yaml
+forward_slots:
+  - slot: "1"                    # routing handle (classic form)
+  - slot: "2"
+    label: "Notify text"         # optional display metadata
+    description: "Status line"   # optional
+    type: text                   # forward | text | bool — absent = forward
+    value: "hello there"         # text: str; bool: true/false — no coercion
+    ref_slot: "1"                # optional WHOLE pair on value slots only,
+    ref_field: "command"         # target must be a forward slot of the list
+  - slot: "3"
+    label: "Verbose switch"
+    type: bool
+    value: true
+    input_schema: {}             # forward slots only; structure-only dict
+```
+
+| Key | Valid on | Meaning |
+| --- | --- | --- |
+| `slot` | all | 1–64 chars; letters, digits, `_`, `-` |
+| `label` / `description` | all | Prose shown in the dashboard |
+| `type` | all | Registry value; exact match, no case-folding |
+| `value` | `text`/`bool` | The slot's constant; forbidden on `forward` |
+| `ref_slot`/`ref_field` | `text`/`bool` | Whole pair → a `forward` slot |
+| `input_schema` | `forward` | Structure-only dict (payload contract: T-247) |
+
+A declaration is atomic: an invalid entry (unknown type, wrong value
+kind, half ref, misdirected ref) rejects the whole heartbeat update
+loudly and leaves the previously declared slots intact. Value slots
+never route — submitting against one returns
+`forward_slot_not_routable` (422).
+
 ## Working profiles (`~/.relay/profiles.d/`)
 
 Edit day-to-day profiles outside the active file, then validate and

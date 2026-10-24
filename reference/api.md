@@ -92,6 +92,7 @@ admin role (admin node token, human admin session or the master user).
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/relay/v2/forward-mappings` | admin | List mappings; optional `?node=<node_id>` filter (validated against registered nodes) |
+| GET | `/relay/v2/forward-mappings/slots` | admin | List declared slots |
 | PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…"}` |
 | DELETE | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Delete one mapping |
 
@@ -101,11 +102,23 @@ admin role (admin node token, human admin session or the master user).
 Both mutations write an audit entry (`forward.mapping_upsert` /
 `forward.mapping_delete`).
 
+Declaring rows (`GET /relay/v2/forward-mappings/slots`) are node-owned
+metadata and carry exactly `node_id`, `slot`, `label`, `description`,
+`slot_type` (always resolved — legacy rows without a stored type read as
+`forward`), `value` / `input_schema` (parsed native JSON), `ref_slot`,
+`ref_field` and `updated_at`. Nodes declare them via the worker
+heartbeat, never via this API; a rejected declaration (422
+`forward_slot_invalid`, heartbeat-scoped) leaves the previous slots
+intact, and a submit against a declared `text`/`bool` slot is refused
+with `forward_slot_not_routable` (422) before mapping resolution (see
+[typed slots](../concepts/forward-routing.md#typed-slots)).
+
 Error codes (the API detail string is always `<code>: <message>`):
 
 | HTTP | Code | Raised when |
 |---|---|---|
 | 422 | `forward_mapping_missing` | submit: `(node, slot)` not configured; DELETE: mapping absent |
+| 422 | `forward_slot_not_routable` | submit against a declared value slot |
 | 422 | `forward_mapping_invalid` | slot empty, whitespace-only, oversized, disallowed characters, or a mapping target that points at `forward` |
 | 404 | `forward_node_unknown` | the submitter node is not registered (also an unknown `?node=` filter on `GET`) |
 | 422 | `target_unknown_capability` | `PUT`: the target capability is not in the capability catalog |
