@@ -160,9 +160,15 @@ rule's target (chaining is deterministic).
   neither a written target nor a **reserved prompt field** is dropped —
   deliberate anti-drift (a rewrite should not carry arbitrary junk into
   the provider's payload). The reserved set is
-  `task`, `prompt`, `question`, `message`, `input` — the verbatim mirror
-  of the flow handler's `PROMPT_KEYS` chain, so a handler's prompt
-  channel cannot be eaten by an unbinding rewrite. A reserved field that
+  `task`, `prompt`, `question`, `message`, `input`, `systemprompt`,
+  `taskprompt` — the verbatim mirror
+  of the flow handler's prompt channel (`PROMPT_KEYS` chain plus the
+  plan-split fields), so a handler's prompt
+  channel cannot be eaten by an unbinding rewrite. On the plan-split
+  channel the flow planner submits `systemprompt`/`taskprompt` as a pair;
+  they survive the sweep unless a rule consumes them, so both the unbound
+  handler join and a future binding reproduce the full prompt. A reserved
+  field that
   a rule actually binds (as source or target) does **not** double-survive
   — "survives unless consumed".
 - **Hard validation at the PUT** (the mapping is admin config; a config

@@ -72,6 +72,25 @@ node-cli task submit \
            "input": {"path": "/data/report.html"}}' | jq
 ```
 
+### Plan prompt split (`FLOW_PLAN_PROMPT_SPLIT`)
+
+With the env `FLOW_PLAN_PROMPT_SPLIT=1` in the runner container the
+plan-phase submit sends the prompt as **two payload fields** instead of
+one `task` string:
+
+- `systemprompt` — the frozen planner contract (output format, plan
+  schema, data-sharing rules); static,
+- `taskprompt` — the task plus the capabilities snapshot; on a retry the
+  validation feedback is appended here,
+- `forward_slot` — unchanged (`plan`).
+
+Default **off**: without the env the runner submits the legacy single
+`task` payload (byte-identical behavior; rollback = recreate the container
+without the env). At binding-NULL mappings the payload passes the relay
+through 1:1 and the `agent.ai` handler merges the pair — `systemprompt`,
+one blank line, `taskprompt`; a later binding reproduces the same join
+via the binding default separator.
+
 ## Operational notes
 
 - **One Kanban per node** (`max_parallel: 1`): parallelise flows by
