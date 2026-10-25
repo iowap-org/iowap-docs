@@ -93,21 +93,29 @@ admin role (admin node token, human admin session or the master user).
 |---|---|---|---|
 | GET | `/relay/v2/forward-mappings` | admin | List mappings; optional `?node=<node_id>` filter (validated against registered nodes) |
 | GET | `/relay/v2/forward-mappings/slots` | admin | List declared slots |
-| PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…", "target_node_id": "<node_id>"}` (the optional provider pin, T-246) |
+| PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…", "target_node_id": "<node_id>", "binding": {"rules": [{"sources": ["…"], "target": "…"}], "separator": "\n\n"}}` (the optional provider pin, T-246; the optional payload binding, T-247) |
 | DELETE | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Delete one mapping |
 
 `GET` rows carry `node_id`, `slot`, `target_capability`, `target_node_id`
 (the optional provider pin, `null` = unpinned = "any capable provider"),
-`created_at`, `updated_at`. `PUT` is an upsert: an existing `(node_id,
-slot)` keeps its `created_at`, gets its `updated_at` bumped, and stores the
-new target. The PUT is a **full-row replace** — a body that omits
-`target_node_id` (or sends `""`) **unpins** on every save. A sent pin is
-validated hard when stored: the node must exist (`422 target_node_unknown`)
-and must advertise the target capability itself, node-scoped (`422
-target_node_lacks_capability`); unpinned PUTs keep the legacy ladder.
-Both mutations write an audit entry (`forward.mapping_upsert` /
-`forward.mapping_delete`; upsert details carry `pin=<id>` or
-`pin=variabel`).
+`binding` (the parsed payload binding — native object or `null` for
+legacy passthrough; T-247), `created_at`, `updated_at`. `PUT` is an
+upsert: an existing `(node_id, slot)` keeps its `created_at`, gets its
+`updated_at` bumped, and stores the new target. The PUT is a
+**full-row replace** — a body that omits `target_node_id` (or sends
+`""`) **unpins** on every save, and a body that omits `binding` (or
+sends `null`) **unbinds** the same way. A sent pin is validated hard
+when stored: the node must exist (`422 target_node_unknown`) and must
+advertise the target capability itself, node-scoped (`422
+target_node_lacks_capability`); unpinned PUTs keep the legacy ladder. A
+sent binding's rules must pass the shape check (`forward_binding_invalid`)
+and reference declared contract fields in both branches — see
+[payload binding](../concepts/forward-routing.md#payload-binding); the
+four binding codes are PUT-scoped, `forward_binding_invalid` also
+refuses submits whose *stored* binding is corrupt. Both mutations write
+an audit entry (`forward.mapping_upsert` / `forward.mapping_delete`;
+upsert details carry `pin=<id>` or `pin=variabel` plus `binding=on` or
+`binding=legacy`).
 
 Declaring rows (`GET /relay/v2/forward-mappings/slots`) are node-owned
 metadata and carry exactly `node_id`, `slot`, `label`, `description`,
@@ -115,7 +123,10 @@ metadata and carry exactly `node_id`, `slot`, `label`, `description`,
 `forward`), `value` / `input_schema` (parsed native JSON), `ref_slot`,
 `ref_field` and `updated_at`. Nodes declare them via the worker
 heartbeat, never via this API; a rejected declaration (422
-`forward_slot_invalid`, heartbeat-scoped) leaves the previous slots
+`forward_slot_invalid`, heartbeat-scoped — since T-247 also when a
+declared ref's `ref_field` is not a field of the referenced slot's
+`input_schema`, or the referenced slot declares no schema at all) leaves
+the previous slots
 intact, and a submit against a declared `text`/`bool` slot is refused
 with `forward_slot_not_routable` (422) before mapping resolution (see
 [typed slots](../concepts/forward-routing.md#typed-slots)).
@@ -132,6 +143,10 @@ Error codes (the API detail string is always `<code>: <message>`):
 | 422 | `target_node_invalid` | `PUT`: the pin is not a string or exceeds the 64 character cap (body-model violations surface as a pydantic list 422) |
 | 422 | `target_node_unknown` | `PUT`: the pinned node has no nodes row |
 | 422 | `target_node_lacks_capability` | `PUT`: the pinned node does not advertise the target capability itself (node-scoped, not the aggregate) |
+| 422 | `forward_binding_invalid` | `PUT`: the binding's form violates the rules shape (non-dict root, empty/missing `rules`, padded / empty / oversized / duplicate names, duplicate targets, non-string `separator`); also at submit when the *stored* binding text is corrupt, and when a declared `input_schema` text is unparseable (origin named in the message) |
+| 422 | `forward_binding_unknown_source_field` | `PUT`: a rule source is not a field of the submitter's declared slot `input_schema` (only enforced when the slot declares one) |
+| 422 | `forward_binding_unknown_target_field` | `PUT`: a rule target is not a field of the branch schema (the pin node's capability `input_schema` when pinned; the slot's `input_schema` when unpinned) |
+| 422 | `forward_binding_requires_schema` | `PUT`: a binding was sent but the branch's field universe is undeclared (a pinned provider capability without `input_schema`; an unpinned mapping whose slot declares no `input_schema`) |
 | 400 | `redirect_self` | `PUT`: the target capability is `forward` |
 | 403 | `Admin role required` | any mapping route called without an admin context |
 

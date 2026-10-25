@@ -63,14 +63,20 @@ absent `type` resolves to `forward`, so pre-typed-slot declarations keep
 working unchanged.
 
 - **`forward`** — the classic routing handle: no `value` (the target lives
-  in `forward_mappings`), no refs; `input_schema` is allowed as a
-  structure-only dict (its contents stay unvalidated until the T-247
-  payload contract exists).
+  in `forward_mappings`), no refs; `input_schema` is an object whose
+  structure is validated at declaration (dict-or-422). Since T-247 the
+  declared field names carry weight beyond structure: they are the
+  `ref_field` universe of the declaration (schema-gated refs, see below)
+  and the validation universe for un-pinned binding targets.
 - **`text` / `bool`** — value slots. A `text` value must be a string, a
   `bool` value a real boolean (`"true"` / `1` are refused — no coercion).
   Value slots may declare a **ref** as a whole pair (`ref_slot` +
   `ref_field`); the referenced slot must be a `forward` slot of the same
   declaration (value slots are never referable, so refs cannot cycle).
+  Since T-247 the ref is also **content-checked**: the referenced slot
+  must declare an `input_schema` and its `ref_field` must be one of the
+  declared field names — a schema-less or unknown-field ref is refused
+  (this fulfills the T-245 deferral, D-09).
 - Types are matched exactly (trimmed, case-sensitive): unknown, empty or
   mis-typed values are a loud `422 forward_slot_invalid`. A rejected
   declaration never touches existing rows — validation runs before the
@@ -134,6 +140,81 @@ location to fix.
   deterministically until the timeout instead of self-healing to another
   provider.
 
+## Payload binding
+
+Since migration 18 a mapping may carry an optional **payload binding**:
+`forward_mappings.binding` is a JSON text of the form
+`{"rules": [{"sources": ["…"], "target": "…"}], "separator": "…"}`.
+`NULL` / omitted = **legacy 1:1 passthrough** (no backfill — the mapping
+keeps its behaviour). One rule with **one** `sources` entry copies that
+payload field's value into `target`; **several** entries join the present
+values with `separator` (default `"\n\n"`, any content allowed including
+the empty string — adjacent join). Rule `target`s are **disjoint**
+across rules (a duplicate would make the projection order-dependent and
+is refused at PUT). Rules fire in order: a rule with none of its source
+fields present stays dormant (writes and consumes nothing), a fired rule
+**consumes** its matched sources, and a later rule may read an earlier
+rule's target (chaining is deterministic).
+
+- **Unbound fields fly.** After the last rule every payload key that is
+  neither a written target nor a **reserved prompt field** is dropped —
+  deliberate anti-drift (a rewrite should not carry arbitrary junk into
+  the provider's payload). The reserved set is
+  `task`, `prompt`, `question`, `message`, `input` — the verbatim mirror
+  of the flow handler's `PROMPT_KEYS` chain, so a handler's prompt
+  channel cannot be eaten by an unbinding rewrite. A reserved field that
+  a rule actually binds (as source or target) does **not** double-survive
+  — "survives unless consumed".
+- **Hard validation at the PUT** (the mapping is admin config; a config
+  error must be loud at write time, not at some later submit):
+  - the **form** is validated first — wrong shapes, padded/empty/oversized
+    names, non-list `sources`, an optional `separator` that is not a
+    string → `422 forward_binding_invalid`;
+  - **sources** are validated against the submitter's declared slot
+    `input_schema` when the slot declares one (`422
+    forward_binding_unknown_source_field`); a slot without a schema keeps
+    free payload field names (the payload itself is the universe at
+    submit, a dead source is simply dormant);
+  - **targets** are hard in both branches: a **pinned** mapping validates
+    against the pin node's own `input_schema` row for the target
+    capability (node-scoped, never the aggregate — `422
+    forward_binding_unknown_target_field` when the schema names the
+    field nowhere, `422 forward_binding_requires_schema` when the
+    provider declares no schema at all); an **un-pinned** mapping
+    validates against the same slot schema as the sources (absent schema
+    → `forward_binding_requires_schema` — un-pinned bindings require the
+    submitter to declare its contract).
+- **Submit-time rewrite.** The binding projects the stage payload during
+  the existing forward rewrite (one task ID, no re-submit, no third
+  mode): payload-only — claim gates, owner semantics and the
+  `forward_refused` event gate stay untouched. The stored stage payload
+  remains a JSON string (the rewrite result is serialized as-is). A
+  **corrupt stored binding** (invalid JSON or a shape that no longer
+  passes the form validation) refuses the submit loudly with `422
+  forward_binding_invalid` — never a silent passthrough — and carries no
+  event (configuration error, not a slot refusal). Mappings **without a
+  binding behave byte-identically** to the pre-binding behaviour.
+- **Full-row replace / no auto-unbind.** Like the pin, the binding is
+  replaced on every PUT: omitting `binding` unbinds (legacy passthrough).
+  The binding stores field *names* — no reference to any row — so when a
+  provider's schema loses a field later (heartbeat re-declare), the
+  binding keeps its deterministic projection and the row **displays**
+  its state in the dashboard ("Binding" column); the next PUT
+  re-validates against the then-current schema and fails loudly there.
+  The admin surface is the correction path (no silent auto-unbind).
+
+This fulfills the two T-245 deferrals: **D-05** (the slot/input_schema
+field contract) is the binding PUT validation above plus the
+schema-gated refs described in [typed slots](#typed-slots); **D-09**
+(the `ref_field` content check) is the declaration-side ref validation.
+
+The dashboard's mapping editor renders rule rows with **source chips**
+(from the submitter's declared slot schema; free-name inputs when the
+slot declares no schema), a **target field** with suggestions from the
+target capability's schema, a **separator** input, and a **"match by
+name"** helper that prefills 1:1 rules from the schema intersection.
+Clearing every rule and saving sends `binding: null` (legacy).
+
 ## Relating events and errors
 
 A refused slot submit is visible on the event bus as `forward_refused`
@@ -142,11 +223,17 @@ A refused slot submit is visible on the event bus as `forward_refused`
 `forward_node_unknown` (404); typed-slot codes add
 `forward_slot_not_routable` (422, submit against a declared value slot —
 no `forward_refused` event) and the declaration-side `forward_slot_invalid`
-(422, heartbeat-scoped). Mapping-management errors are
-`target_unknown_capability` (422), `redirect_self` (400) and the pin codes
+(422, heartbeat-scoped, including the schema-gated ref checks).
+Mapping-management errors are
+`target_unknown_capability` (422), `redirect_self` (400), the pin codes
 `target_node_invalid` / `target_node_unknown` /
 `target_node_lacks_capability` (422, PUT-scoped, see
-[provider pin](#provider-pin)). The full table:
+[provider pin](#provider-pin)) and the binding codes
+`forward_binding_invalid` / `forward_binding_unknown_source_field` /
+`forward_binding_unknown_target_field` /
+`forward_binding_requires_schema` (422, PUT-scoped and — for corrupt
+stored binding state — submit-scoped, see [payload
+binding](#payload-binding)). The full table:
 [API reference](../reference/api.md#forward-routing-relayv2forward-mappings).
 
 ## Limits
