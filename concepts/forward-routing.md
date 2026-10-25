@@ -86,6 +86,54 @@ a stored type keep routing unchanged. The refusal carries no
 `forward_refused` event: gate refusals are configuration errors (the
 declaration needs a fix on the node), not runtime refusals.
 
+## Provider pin
+
+Since migration 17 a mapping can optionally be **pinned** to one concrete
+node: `forward_mappings.target_node_id`. `NULL` = no pin = the legacy "any
+capable provider" behaviour (no backfill — every pre-existing mapping is
+unpinned by definition). The pin answers the schema-drift problem: when the
+same capability is advertised by nodes with different `input_schema` shapes,
+pinning makes the executing node — and therefore the payload contract —
+exact instead of "whatever provider claims first". The dashboard shows the
+pin as the node's name in the mapping table ("Provider" column) and marks
+unpinned mappings with a visible **"Provider variabel"** badge — the drift
+location to fix.
+
+- **The pin is the execution address, orthogonal to visibility.** It lives
+  on the **stage** (`task_stages.target_node_id`, copied from the mapping at
+  submit time), not on `tasks.owner_node_id`: the task owner is the T-227
+  visibility semantics and stays untouched (the claimer of a single-stage
+  task still flips the owner; multi-stage fan-out tasks never flip, and
+  each forward stage of one task may carry a different pin).
+- **Hard validation at PUT** (the admin's config, validated when it is
+  written): the pin node must exist (`422 target_node_unknown`) and it must
+  advertise the mapping's target capability **itself** — a node-scoped row
+  read, never the catalog aggregate (`422
+  target_node_lacks_capability`). The pin form is a plain string (trimmed,
+  64-char cap; `422 target_node_invalid` otherwise, e.g. over length);
+  mis-typed values are rejected by the body model (a pydantic list-422).
+  Unpinned PUTs keep the legacy ladder byte-identical, including its
+  aggregate catalog check.
+- **Submit and claim:** the submit-time rewrite copies the pin onto the
+  stage next to the resolved capability; the claim gate then accepts a
+  pinned stage only from its pin target (`s.target_node_id IS NULL OR
+  s.target_node_id = <claimer>`). Undeclared pins keep the first-claimer-
+  wins semantics. A **pending stage whose pin target no longer exists** is
+  failed at claim time instead of pending forever (the pre-SELECT dead-pin
+  sweep — the owner-deleted analogue), eventless like every stage-level
+  fail.
+- **Unpin rule:** the PUT is a full-row replace — a body that **omits**
+  `target_node_id` (or sends `""`) unpins the mapping on every save, exactly
+  like `target_capability` replacement. Deleting the pinned **node** keeps
+  the routing definition and voids the pin: mappings pinned at the deleted
+  node and their stages read `NULL` ("provider variabel") after the delete,
+  and the submitters' mapping rows survive.
+- A pinned stage that is also owned by another node (owner ≠ pin, both
+  alive) is permanently pending — the two gates are orthogonal by design.
+  Pin and slot timeout belong together: a fallen provider blocks the task
+  deterministically until the timeout instead of self-healing to another
+  provider.
+
 ## Relating events and errors
 
 A refused slot submit is visible on the event bus as `forward_refused`
@@ -95,7 +143,10 @@ A refused slot submit is visible on the event bus as `forward_refused`
 `forward_slot_not_routable` (422, submit against a declared value slot —
 no `forward_refused` event) and the declaration-side `forward_slot_invalid`
 (422, heartbeat-scoped). Mapping-management errors are
-`target_unknown_capability` (422) and `redirect_self` (400). The full table:
+`target_unknown_capability` (422), `redirect_self` (400) and the pin codes
+`target_node_invalid` / `target_node_unknown` /
+`target_node_lacks_capability` (422, PUT-scoped, see
+[provider pin](#provider-pin)). The full table:
 [API reference](../reference/api.md#forward-routing-relayv2forward-mappings).
 
 ## Limits

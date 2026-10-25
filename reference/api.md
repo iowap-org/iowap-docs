@@ -93,14 +93,21 @@ admin role (admin node token, human admin session or the master user).
 |---|---|---|---|
 | GET | `/relay/v2/forward-mappings` | admin | List mappings; optional `?node=<node_id>` filter (validated against registered nodes) |
 | GET | `/relay/v2/forward-mappings/slots` | admin | List declared slots |
-| PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…"}` |
+| PUT | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Upsert one mapping, body `{"target_capability": "…", "target_node_id": "<node_id>"}` (the optional provider pin, T-246) |
 | DELETE | `/relay/v2/forward-mappings/{node_id}/{slot}` | admin | Delete one mapping |
 
-`GET` rows carry `node_id`, `slot`, `target_capability`, `created_at`,
-`updated_at`. `PUT` is an upsert: an existing `(node_id, slot)` keeps its
-`created_at`, gets its `updated_at` bumped, and stores the new target.
+`GET` rows carry `node_id`, `slot`, `target_capability`, `target_node_id`
+(the optional provider pin, `null` = unpinned = "any capable provider"),
+`created_at`, `updated_at`. `PUT` is an upsert: an existing `(node_id,
+slot)` keeps its `created_at`, gets its `updated_at` bumped, and stores the
+new target. The PUT is a **full-row replace** — a body that omits
+`target_node_id` (or sends `""`) **unpins** on every save. A sent pin is
+validated hard when stored: the node must exist (`422 target_node_unknown`)
+and must advertise the target capability itself, node-scoped (`422
+target_node_lacks_capability`); unpinned PUTs keep the legacy ladder.
 Both mutations write an audit entry (`forward.mapping_upsert` /
-`forward.mapping_delete`).
+`forward.mapping_delete`; upsert details carry `pin=<id>` or
+`pin=variabel`).
 
 Declaring rows (`GET /relay/v2/forward-mappings/slots`) are node-owned
 metadata and carry exactly `node_id`, `slot`, `label`, `description`,
@@ -121,7 +128,10 @@ Error codes (the API detail string is always `<code>: <message>`):
 | 422 | `forward_slot_not_routable` | submit against a declared value slot |
 | 422 | `forward_mapping_invalid` | slot empty, whitespace-only, oversized, disallowed characters, or a mapping target that points at `forward` |
 | 404 | `forward_node_unknown` | the submitter node is not registered (also an unknown `?node=` filter on `GET`) |
-| 422 | `target_unknown_capability` | `PUT`: the target capability is not in the capability catalog |
+| 422 | `target_unknown_capability` | `PUT`: the target capability is not in the capability catalog (unpinned path) |
+| 422 | `target_node_invalid` | `PUT`: the pin is not a string or exceeds the 64 character cap (body-model violations surface as a pydantic list 422) |
+| 422 | `target_node_unknown` | `PUT`: the pinned node has no nodes row |
+| 422 | `target_node_lacks_capability` | `PUT`: the pinned node does not advertise the target capability itself (node-scoped, not the aggregate) |
 | 400 | `redirect_self` | `PUT`: the target capability is `forward` |
 | 403 | `Admin role required` | any mapping route called without an admin context |
 
@@ -405,7 +415,18 @@ curl -s -X PUT "http://${RELAY_HOST}:8788/relay/v2/forward-mappings/<submitter_i
   -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
   -d '{"target_capability": "agent.ai"}' | jq
 # -> {"node_id": "<submitter_id>", "slot": "1", "target_capability": "agent.ai",
-#     "created_at": "...", "updated_at": "..."}
+#     "target_node_id": null, "created_at": "...", "updated_at": "..."}
+
+# Admin (T-246): pin the same mapping to one concrete node — the mapped
+# capability must be advertised by that node ITSELF. A body without
+# "target_node_id" (or with "") unpins on the next save.
+curl -s -X PUT "http://${RELAY_HOST}:8788/relay/v2/forward-mappings/<submitter_id>/1" \
+  -H "Authorization: Bearer ***" -H "Content-Type: application/json" \
+  -d '{"target_capability": "agent.ai", "target_node_id": "<provider_id>"}' | jq
+# -> {"node_id": "…", "slot": "1", "target_capability": "agent.ai",
+#     "target_node_id": "<provider_id>", "created_at": "…", "updated_at": "…"}
+# Pin refusals: 422 {"detail": "target_node_unknown: …"} (no such node) /
+# {"detail": "target_node_lacks_capability: …"} (pin node lacks the cap).
 
 # Submitter: a forward task is resolved against the submitter's mapping
 # at submit time — no second task, no re-submission.
