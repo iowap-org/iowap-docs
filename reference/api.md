@@ -432,7 +432,7 @@ curl -s -X PUT "http://${RELAY_HOST}:8788/relay/v2/forward-mappings/<submitter_i
 # -> {"node_id": "<submitter_id>", "slot": "1", "target_capability": "agent.ai",
 #     "target_node_id": null, "created_at": "...", "updated_at": "..."}
 
-# Admin (T-246): pin the same mapping to one concrete node — the mapped
+# Admin: pin the same mapping to one concrete node — the mapped
 # capability must be advertised by that node ITSELF. A body without
 # "target_node_id" (or with "") unpins on the next save.
 curl -s -X PUT "http://${RELAY_HOST}:8788/relay/v2/forward-mappings/<submitter_id>/1" \
