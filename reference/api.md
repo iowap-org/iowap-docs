@@ -287,11 +287,15 @@ Admin runtime token required:
 Serves every Markdown page in the docs tree as HTML — discovered
 mechanically (flat slugs: path relative to `docs/`, `/` joined with `-`).
 No code change needed to add a page; legacy short names keep resolving.
+`/relay/v2/docs/llms.txt` delivers the repository's `docs/llms.txt`
+agent bootstrap index raw (text/plain, not rendered). There is no root
+`/llms.txt` alias — the docs mount is prefix-bound.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/relay/v2/docs` | none | JSON index of served documents (not in openapi.json — include_in_schema=False) |
 | GET | `/relay/v2/docs/{slug}` | none | Render one document as HTML (not in openapi.json — include_in_schema=False) |
+| GET | `/relay/v2/docs/llms.txt` | none | Deliver `llms.txt` raw (text/plain, not rendered) (not in openapi.json — include_in_schema=False) |
 
 That's what `node-cli docs` consumes.
 
