@@ -21,7 +21,7 @@ pip install "iowap-client-mcp[mcp]"
 ```
 
 Live on the [Python Package Index](https://pypi.org/project/iowap-client-mcp/)
-since 0.1.2 — or let a local node install it: `node-cli mcp install`
+since 0.1.3 — or let a local node install it: `node-cli mcp install`
 (own venv, client-neutral, PyPI registry — see [node CLI](../node/cli.md)
 under `mcp`). Pinned alternatives live on the
 [releases tab](https://github.com/iowap-org/iowap-client-mcp/releases) of
@@ -29,7 +29,7 @@ this repo's GitHub (wheel assets per release).
 
 ```console
 $ iowap-mcp --version
-0.1.2
+0.1.3
 ```
 
 ## Wire an MCP client
