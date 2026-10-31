@@ -83,6 +83,7 @@ path relative to `docs/`, `/` joined with `-`.
 | Relay Server | [iowap-org/iowap-server](https://github.com/iowap-org/iowap-server) |
 | Node Framework | [iowap-org/iowap-node](https://github.com/iowap-org/iowap-node) |
 | Storage Node | [iowap-org/iowap-storage](https://github.com/iowap-org/iowap-storage) |
+| Document Management Node (Paperless-ngx) | [iowap-org/iowap-paperless](https://github.com/iowap-org/iowap-paperless) |
 | Flow Runner (orchestrator node) | [iowap-org/iowap-flow](https://github.com/iowap-org/iowap-flow) |
 | Home Assistant App | [iowap-org/iowap-ha](https://github.com/iowap-org/iowap-ha) |
 | Federation Node (cross-relay) | [iowap-org/iowap-federation](https://github.com/iowap-org/iowap-federation) |

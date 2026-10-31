@@ -53,5 +53,7 @@
 
 ## Reference (look-up)
 - [reference/api](reference/api.md): endpoint tables (auth/discovery/scheduler/storage/routes/dashboard/admin/docs) + worked cURL examples
+- [reference/cli](reference/cli.md): every node-cli command, subcommand, flag + help — generated from the live argparse tree
 - [reference/database-backends](reference/database-backends.md): SQLAlchemy Core layer, migrations, adding a backend
 - [reference/design-board](reference/design-board.md): historical design records
+- [docs/format-discussion-draft](docs/format-discussion-draft.md): README-format decision draft for the iowap-org repos — 6 open points, positions + recommendations

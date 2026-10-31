@@ -3,8 +3,10 @@ name: docs-ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
   schedule:
     - cron: "17 3 * * 1" # weekly: catch route drift coming from server main
+    - cron: "23 4 * * *" # daily: submodule drift gate (server gitlink vs docs main)
 
 jobs:
   checks:
@@ -25,6 +27,9 @@ jobs:
         run: python3 tools/check_captures.py
 
   api-drift:
+    # weekly route-drift cadence only — the second daily cron is for
+    # submodule-drift
+    if: github.event_name != 'schedule' || github.event.schedule == '17 3 * * 1'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,3 +44,35 @@ jobs:
         run: pip install -e ./iowap-server
       - name: api.md endpoint drift gate
         run: python3 tools/check_api_routes.py --server ./iowap-server
+
+  submodule-drift:
+    # Gate, not automation: fails loudly when the iowap-server docs gitlink
+    # trails this repo's main so a human bumps the submodule in the server
+    # repo. No automated push to the server repo from here.
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: server gitlink (path docs) vs docs main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DOCS_SHA="$(git rev-parse HEAD)"
+          SERVER_SHA="$(gh api repos/iowap-org/iowap-server/contents/docs --jq '.sha')"
+          echo "docs main HEAD:  $DOCS_SHA"
+          echo "server gitlink:  $SERVER_SHA"
+          if [ "$SERVER_SHA" = "$DOCS_SHA" ]; then
+            echo "in sync: server submodule points at docs main"
+            exit 0
+          fi
+          N="$(gh api "repos/iowap-org/iowap-docs/compare/${SERVER_SHA}...${DOCS_SHA}" --jq '.ahead_by' 2>/dev/null || echo '?')"
+          if [ "$N" = "1" ]; then
+            printf 'server submodule behind docs main by 1 (gitlink %s != %s) — bump server\n' "$SERVER_SHA" "$DOCS_SHA"
+          elif [ "$N" = "?" ] || [ "$N" = "0" ]; then
+            printf 'server submodule %s out of sync with docs main (%s) — bump server\n' "$SERVER_SHA" "$DOCS_SHA"
+          else
+            printf 'server submodule behind docs main by %s (gitlink %s != %s) — bump server\n' "$N" "$SERVER_SHA" "$DOCS_SHA"
+          fi
+          exit 1
