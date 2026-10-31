@@ -32,7 +32,7 @@ exactly these terms — humans and AI readers can rely on one vocabulary.
 | **Request/Response envelope** | `{task_id, capability, input:{…}}` in; `{status, result, error}` out — the handler I/O contract. |
 | **Result path hints** | Capability-declared, machine-readable paths into the result object (e.g. `answer`) — used by flow planners. |
 | **Flow** | `flow.run` capability: takes an origin task, plans subtasks, fans them out, aggregates results. A node feature, not a relay feature. |
-| **Federation** | Bridging capabilities across relays (not yet implemented). See [federation](../federation/concept.md). |
+| **Federation** | Bridging capabilities between relays via a normal node heartbeating `federation`. Canonical status: *"V1 forward path implemented; result return leg open."* See [federation](../federation/concept.md). |
 | **SSE** | Server-Sent Events — the relay pushes typed events (e.g. `status_changed`, `task_failed`) on `GET /relay/v2/events/stream`. |
 | **Self-care pattern** | A node without reasoning posts a decision task for a reasoning capability instead of deciding itself. |
 | **Flow** | Compound task orchestrated by the flow runner: plan (via `agent.ai`) → fan-out as ordinary tasks → join → aggregate. See [flow](flow.md). |
