@@ -103,6 +103,40 @@ traffic by what it needs from the receiver:
 is one task addressed back with `reply_to` set to the first id of the
 coalesced series; it stands for the whole series.
 
+### Identity (T-061F)
+
+The sender identity is the **relay-assigned caller node id** (`RELAY_NODE_ID`
+at the receiving handler), never a payload field. `from` is informational:
+a handler receiving a `from` that differs from the caller node id
+**overwrites** it (logged as `from_mismatch_overwritten`), so an A2A message
+cannot forge its sender. Callback addressing is node-id based and
+fail-closed: the target must full-match an iowap node id (no alias map, no
+partial matches) — no match, no callback task.
+
+### Reply correlation (T-061F)
+
+The wrapper's task callback consumes the pending `reply_to` correlation only
+on a **confirmed** submit (returncode 0). A failed submit keeps it, so the
+next reply re-carries the peer's message id (retry-on-next-reply).
+
+### Bundle delivery guarantee (T-061F)
+
+Digest bundles are persisted into `a2a_pending_bundles.json` before dispatch
+and cleared only after the gateway accepted the hand-off. The flush timer's
+first pass recovers undelivered entries after every restart (at-least-once;
+a crash after hand-off but before the clear can repeat a bundle — accepted,
+a duplicate turn is harmless context noise). Authorization for bundles runs
+inside the gateway framework, same as the direct message path.
+
+Deliberate divergence from the unified T-080 semantics: the post-flush
+cooldown gates **flushes** (timer pass and window-elapsed entry flushes),
+never interactive single messages — an isolated message arriving right
+after a bundle flush dispatches immediately.
+
+Sender-side `type` marking is the protocol path (agents mark their own
+status/probe output explicitly); a wrapper-side text classifier is a
+transitional fallback, not part of the contract.
+
 Compute requests are **tasks, never chat**: call the peer's compute
 capability directly via task submit (see [capabilities](capabilities.md))
 instead of wrapping them into an a2a message.
