@@ -90,3 +90,10 @@ enough; a reply never spawns another reply.
 - [capabilities](capabilities.md) — how `a2a.inbox` is advertised and matched
 - [tasks](tasks.md) — the reply path is an ordinary task
 - [artifacts](artifacts.md) — attachment transport (inline/artifact/bridge)
+- **Bridge adapter:** [github.com/Kesuek/hermes-bridge-adapter](https://github.com/Kesuek/hermes-bridge-adapter) — the plugin that owns the `<bridge_dir>` file tree
+- The bridge adapter is part of the **Hermes Plugin Catalog**:
+
+  ```
+  hermes plugins install bridge-adapter
+  hermes plugins enable bridge-adapter
+  ```
