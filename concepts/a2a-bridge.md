@@ -22,7 +22,8 @@ system**:
 Agent A                         Agent B
   │  task submit a2a.inbox:      │
   │  {from, text}               │
-  └─────────────────────────────▶ inbox/a2a/<id>.json
+  │                              │   handler -> requests/<id>.json (wrapper feed)
+  └─────────────────────────────▶   wrapper -> inbox/a2a/<id>.json
                                  agent reads it, writes reply
                                  outbox/a2a/<reply-id>.json
                                  wrapper send-hook:
@@ -47,6 +48,11 @@ Folder contract (the bridge adapter owns the tree):
 
 The capability's manifest ships `registry/<bridge>.yaml` into `<bridge_dir>`
 — the adapter creates the folders; nothing else is manual.
+
+Chain of an incoming task: the node's `a2a.inbox` handler **queues** the
+payload into a wrapper feed (`requests/`); the **wrapper** is the single
+writer of `inbox/a2a/` (it maps the request into the adapter's schema,
+acks the request file, and later routes the reply out through the outbox).
 
 Message schema (one JSON object per file in `inbox/<bridge>/`):
 
