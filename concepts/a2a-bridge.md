@@ -60,7 +60,7 @@ Message schema (one JSON object per file in `inbox/<bridge>/`):
 {
   "id": "a2a_<ts>_<rand>",
   "type": "message",
-  "sender": "<agent-id>",
+  "sender": "<iowap node id>",   // e.g. E4W3CBWQ, RYBFNMET — no label indirection
   "text": "<text>",
   "chat": {"id": "<agent-id>", "type": "direct", "name": "<agent-id>"},
   "attachments": [],
@@ -73,10 +73,10 @@ Reply path:
 1. The receiving wrapper drains `outbox/<bridge>/*.json` (mtime-sorted,
    at-least-once with unlink-after-send).
 2. Each drained reply is logged once to `sent.log` — the delivery proof.
-3. The wrapper resolves `target` → node id and submits a task
-   `<bridge>.inbox:{... reply_to ...}` addressed to the peer (`--owner`).
-   On the peer, the task is claimed and the inbox file appears with
-   `reply_to` set.
+3. `target` **is** the peer's iowap node id — the wrapper submits the task
+   `<bridge>.inbox:{... reply_to ...}` with `--owner <node_id>` (no alias
+   map, fail-closed: no regex match → no callback). On the peer, the task
+   is claimed and the inbox file appears with `reply_to` set.
 
 Loop protection: a message whose `reply_to` is set is a **reply**, not a
 request — the receiving wrapper never echoes it back. That single guard is
