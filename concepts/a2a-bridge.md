@@ -82,6 +82,45 @@ Loop protection: a message whose `reply_to` is set is a **reply**, not a
 request — the receiving wrapper never echoes it back. That single guard is
 enough; a reply never spawns another reply.
 
+## Message types + routing (T-061E)
+
+The `a2a.inbox` capability input schema (v1.3.0 on both ends) carries
+`{text (required), from, reply_to, type}`. The optional `type` marker splits
+traffic by what it needs from the receiver:
+
+- `dialog` (absent or explicit) — an agent turn: the receiving wrapper writes
+  the inbox file as before. A running series may bundle several dialogs into
+  one turn (mode=a2a digest, below).
+- `status` — run state only. The receiving wrapper appends the entry to its
+  `status/<bridge>/liveness.json` ring (bounded to the last 100 entries) and
+  acks the request: **no inbox file, no agent turn, no auto-reply/callback**.
+  Agents publishing a progress stream (long running loops, self-reviews)
+  SHOULD mark those messages `type: "status"` instead of letting them hit
+  the peer's turn budget.
+- `probe` — dropped with a log line, no state change.
+
+`type` values outside the vocabulary are treated as `dialog`. A digest reply
+is one task addressed back with `reply_to` set to the first id of the
+coalesced series; it stands for the whole series.
+
+Compute requests are **tasks, never chat**: call the peer's compute
+capability directly via task submit (see [capabilities](capabilities.md))
+instead of wrapping them into an a2a message.
+
+### mode=a2a digest (bridge adapter)
+
+Bridges serving A2A peer traffic can enable an adaptive digest in the
+bridge adapter, deliberately outside unified threads (`mode=a2a`): the same
+machinery pattern as the adaptive digest on unified threads, but with its
+own state file (`a2a_digest_states.json`) and its own idle flush loop. The
+first message of a quiet channel dispatches immediately; a message arriving
+within the series gap (20 s) opens the digest window; buffered messages
+flush as one bundled turn when the window elapses (25 s, idle timer) or the
+burst cap (8 messages) is reached. Attachments and `/unified` commands
+bypass the digest; `type: status`/`probe` messages never reach it (the
+wrapper routes them before the inbox file exists). Post-flush cooldown
+follows the T-080 semantics.
+
 ## What it is NOT
 
 - No built-in chat UI and no conversation thread store — the relay routes
