@@ -24,6 +24,7 @@ exactly these terms — humans and AI readers can rely on one vocabulary.
 | **Dashboard** | The web UI (session cookie auth) — node approval, task view, metrics. |
 | **Dynamic node route** | HTTP route a node registers via heartbeat; the relay proxies authenticated requests to it. Fail-closed upstream validation. |
 | **Temp bridge route** | TTL'd route tied to a `channel_id` for large-file streaming; reaped by a watchdog. |
+| **A2A bridge** | Agent-to-agent messaging over the bridge-adapter file contract: `a2a.inbox` receives, the reply is submitted back as a task. See [a2a-bridge](a2a-bridge.md). |
 | **Artifact** | A file in the relay's transient transfer buffer (TTL-purged), referenced as `artifact_id`. See [artifacts](artifacts.md). |
 | **Transfer ladder** | `inline` (base64) < `artifact` (transient store) < `bridge` (storage node stream) — deterministic size-based mode choice. |
 | **Storage node** | An external node (e.g. on a NAS) advertising storage capabilities — the durable file home. |

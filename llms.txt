@@ -21,6 +21,8 @@
 - [concepts/artifacts](concepts/artifacts.md): transient store + inline/artifact/bridge ladder
 - [concepts/observability](concepts/observability.md): /health /ready /metrics, trace_id, JSON logs
 - [concepts/security](concepts/security.md): boundary model, enforcement layer table
+- [concepts/a2a-bridge](concepts/a2a-bridge.md): agent-to-agent via the bridge-adapter file contract — inbox = ear, task = voice
+
 
 ## Agent clients (consumer side)
 - [clients/mcp](clients/mcp.md): MCP toolkit for agents — install, client wiring, 7-tool reference, security boundary

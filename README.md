@@ -27,6 +27,7 @@ concepts/                     # WHY/WAS — one page per model term
 ├── nodes.md                  #   Node model, heartbeat, statuses
 ├── capabilities.md           #   Routing keys, naming, ladder
 ├── tasks.md                  #   Task/stage lifecycle, status system
+├── a2a-bridge.md             #   Agent-to-agent via the bridge-adapter file contract
 ├── flow.md                   #   Flows: dumb-Kanban orchestration via flow.run
 ├── tokens.md                 #   Credential families
 ├── artifacts.md              #   Transfer ladder (inline/artifact/bridge)
