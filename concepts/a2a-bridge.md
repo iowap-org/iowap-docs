@@ -135,7 +135,11 @@ after a bundle flush dispatches immediately.
 
 Sender-side `type` marking is the protocol path (agents mark their own
 status/probe output explicitly); a wrapper-side text classifier is a
-transitional fallback, not part of the contract.
+transitional fallback, not part of the contract. The **minimum** schema
+contract is v1.3.0 (text/from/reply_to/type); implementations may carry
+higher versions — NovaForge runs v1.4.0 (adds explicit `type` passthrough
+from the outbox message and a `type_source: explicit|classifier` field in
+its `sent.log`).
 
 Compute requests are **tasks, never chat**: call the peer's compute
 capability directly via task submit (see [capabilities](capabilities.md))
