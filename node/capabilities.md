@@ -18,6 +18,7 @@ capabilities:
     claimable: true             # daemon may claim stages for it
     handler: /opt/relay/handlers/chat-ai.sh
     max_parallel: 2
+    cost: 1                     # admission points (default 1; 0 = free)
     timeout: 300
     input_schema:
       fields:
@@ -58,6 +59,11 @@ a capability block are rejected):
 - `status` — operator busy/idle state, managed by
   `node-cli node busy|idle|clear-status` (the CLI edits the active YAML
   as text and preserves the rest of the document verbatim).
+- `budget` — optional points budget (integer) for claim admission: a
+  claim is admitted only when the capability's headroom under
+  `max_parallel` **and** the points axis (in-flight points vs.
+  `budget`) are both free. An invalid hand-edited value in the active
+  file degrades to "axis off" — `validate`/`publish` are the loud path.
 - `node_name`, `description` — node overrides.
 - `node_cli_path` — **maintained by node-cli itself** (since wheel
   2.3.20, T-226): every invocation and the daemon start stamp their own
@@ -69,6 +75,45 @@ a capability block are rejected):
   `PATH` and known install locations. Treat any other top-level key as
   operator config: put it into the working profile in `profiles.d/`, not
   into the active file by hand.
+
+### Claim admission: cost and budget
+
+Claims need two axes free: the capability's headroom under
+`max_parallel` and the running points plus the claim's `cost` staying
+at or below the top-level `budget`. Each in-flight stage reserves its
+capability's `cost` (integer, default `1`,
+`0` = a free capability) and releases it when the stage ends — the
+budget caps concurrent spend, not total claims. No `budget` key in the
+active profile means the points axis is off (default-off). Model facts
+and semantics: [concept: capability](../concepts/capabilities.md).
+
+```yaml
+budget: 10                    # top-level: the node's points budget
+capabilities:
+  - name: image.generate.mflux
+    max_parallel: 1
+    cost: 9                   # running this leaves 1 point for cheap caps
+```
+
+Validation rejects negative or non-integer `cost` and `budget`
+(fail-loud at `validate`/`publish`). The knobs are visible without a
+publish:
+
+```bash
+node-cli capabilities validate default
+# ->   - chat.ai v1.0.0 auto_publish=True claimable=True max_parallel=2 cost=1 timeout=300
+```
+
+```bash
+node-cli capabilities info agent.ai
+# -> Local node:  cost=1, max_parallel=1
+# -> Node budget: (unset — points axis off)
+```
+
+`capabilities validate` prints `cost=` per capability, `capabilities
+diff` surfaces cost changes, and `capabilities info` overlays the
+node-local `cost`/`max_parallel` and the `Node budget` line on the
+relay's stored entry.
 
 ## The handler
 
@@ -265,6 +310,7 @@ node-cli capabilities server --json    # what the server has stored for this nod
 | Problem | Fix |
 |---|---|
 | `403` on claim | profile not published / `auto_publish: false` — `capabilities diff`, then `publish` |
+| claims stall while stages run | points axis: in-flight points reached `budget` — wait for a stage to end, raise `budget`, or lower `cost` (`budget: 0` admits only `cost: 0` capabilities) |
 | publish rejected | duplicate names, claimable without handler, bad types — fix the error the validator names |
 | handler never runs | `handler` path missing or not executable on the node host |
 | routes dead after restart | routes live on heartbeat — node must be online; nothing to re-register manually |

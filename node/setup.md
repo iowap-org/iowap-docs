@@ -128,6 +128,7 @@ capabilities:
     claimable: true
     handler: /opt/relay/handlers/chat-ai.sh
     max_parallel: 2
+    cost: 1                     # admission points (default 1)
     timeout: 300
 YAML
 
@@ -138,7 +139,10 @@ node-cli capabilities publish default      # atomic write to node.yaml
 ```
 
 Field reference: [capabilities how-to](capabilities.md); the model behind
-it: [concept: capability](../concepts/capabilities.md).
+it: [concept: capability](../concepts/capabilities.md). Claim admission
+also has a points axis: when the profile sets a top-level `budget`, a
+claim additionally needs its capability's `cost` points to fit within
+it (no `budget` = that axis is off).
 
 ## 6. Run the daemon
 

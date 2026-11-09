@@ -15,6 +15,8 @@ node_name: felix-cyberfox
 description: "Local AI worker"
 status: busy                     # operator request (better: node-cli node busy)
 
+budget: 10                       # claim-admission points (unset = points axis off)
+
 capabilities:
   - name: chat.ai
     version: "1.0.0"
@@ -22,6 +24,7 @@ capabilities:
     claimable: true
     max_parallel: 2
     timeout: 300
+    cost: 2                       # admission points (default 1)
 ```
 
 ### Node-level fields
@@ -31,6 +34,7 @@ capabilities:
 | `node_name` | Friendly name, forwarded in every heartbeat, shown in dashboard + `node-cli node list` |
 | `description` | Free-form prose (max 1024 chars), forwarded in every heartbeat |
 | `status` | Operator request: `busy` / `idle` / `online` — prefer `node-cli node busy`/`idle`/`clear-status` which write it safely |
+| `budget` | Points budget for claim admission: a claim needs the `max_parallel` headroom **and** the running points plus its capability's `cost` to stay within the budget (points released when the stage ends); unset = points axis off |
 | `capabilities` | Optional list — a node can run with no capabilities and gain them at runtime |
 
 The schema allows additional top-level keys (forward-compatible). Legacy
@@ -39,8 +43,8 @@ files (`capabilities.active.yaml`, `capabilities.d/`) are auto-migrated to
 
 ### Capabilities
 
-Full field reference (type, claimable, handler, max_parallel, timeout,
-input_schema, upload_modes, config): [capabilities how-to](capabilities.md),
+Full field reference (type, claimable, handler, max_parallel, cost,
+timeout, input_schema, upload_modes, config): [capabilities how-to](capabilities.md),
 model: [concept: capability](../concepts/capabilities.md).
 
 ### Forward slots
@@ -96,7 +100,7 @@ YAML
 
 node-cli capabilities validate default      # checks without touching active
 node-cli capabilities publish default       # atomic write to node.yaml (+ SIGHUP)
-node-cli capabilities diff                  # working profile vs active
+node-cli capabilities diff                  # working profile vs active (incl. cost)
 node-cli capabilities current               # active profile name
 ```
 

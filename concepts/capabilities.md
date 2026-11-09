@@ -57,6 +57,7 @@ capabilities:
     claimable: true                       # daemon may claim stages for it
     handler: /opt/relay/handlers/archive.sh   # required when claimable: true
     max_parallel: 2                       # in-flight limit (default 1)
+    cost: 2                               # admission points (default 1; 0 = free)
     timeout: 600                          # handler timeout in seconds (default 300)
     input_schema:                         # optional, documents expected payload fields
       fields:
@@ -75,6 +76,7 @@ capabilities:
 | `claimable` | `true` = scheduler assigns stages; `false` = capability exists only for routes/metadata |
 | `handler` | Script/command executed for claimed stages (envelope I/O — see [handler contract](../node/handlers/contract.md)) |
 | `max_parallel`, `timeout` | Concurrency and time budget per stage |
+| `cost` | Admission points per claim (integer ≥ 0, default 1, `0` = free) — weighed against the node's `budget` below |
 | `config` | Opt-in extensions, e.g. `complete_by_script: true` |
 
 The daemon validates profiles before publishing: duplicate names, missing
@@ -86,6 +88,34 @@ upload_modes, result_path_hints, and the computed `available`
 `node_capabilities` index and resolves them as `capability_details` on
 claim — a claiming handler sees the expected payload shape without an
 extra discovery round-trip.
+
+### Claim admission: cost and budget
+
+A node admits a claim only when **both** of its node-local admission
+axes are true — the parallelism axis (in-flight count below
+`max_parallel`) and the points axis (sum of the in-flight stages'
+admission points at or below the node's `budget`). Points are reserved
+before the claim POST and released when the running stage ends, so the
+budget caps **concurrent** spend — it is not a rate or lifetime
+quota. Both daemon variants (SSE-driven and polling) apply the same
+gate.
+
+```yaml
+# node.yaml — top-level budget, per-capability cost
+budget: 10
+capabilities:
+  - name: image.generate.mflux
+    cost: 9
+  - name: music.play.native               # no cost declared → 1 point
+```
+
+`cost` (integer ≥ 0, default 1; `0` = a free capability) is a
+capability field, `budget` a top-level `node.yaml` key; without
+`budget` the points axis is off and admission stays parallelism-only
+(default-off). Both are node-local: the heartbeat payload builder
+whitelists its fields, so the server never sees them — the normalized
+capability forwards `cost` only when declared, and an undeclared
+default stays invisible, leaving the server digest and API untouched.
 
 ### Non-claimable capabilities
 
