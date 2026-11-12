@@ -21,7 +21,7 @@ this page documents structure, defaults, and behaviour.
 | `heartbeat` | — | Send a single heartbeat and exit |
 | `claim` | `--capability <cap>` | Claim one stage for a capability |
 | `complete` | `[stage_id] --result-file <f>` | Complete a claimed stage (IDs default to `RELAY_*` env) |
-| `task` | `submit · result · wait · note` | Submit (`--stage <cap>:<json>`, `--priority 0-10`, `--owner <node_id>`, `--name`), show result, wait (`--interval`, default 5 s), append note (1–2000 chars) |
+| `task` | `list · submit · result · wait · note` | List (`--submitted-by`, `--owner`, `--status a,b`, `--since/--until` ISO-8601, `--json`; T-248), submit (`--stage <cap>:<json>`, `--priority 0-10`, `--owner <node_id>`, `--name`), show result, wait (`--interval`, default 5 s), append note (1–2000 chars) |
 | `capabilities` | `list · validate · publish · diff · current · server · info` | Profile management — validate/publish atomically; `server`/`info` read the relay's registry |
 | `node` | `list · info · busy · idle · clear-status · status · register` | Fleet queries + own status + self-registration |
 | `server` | `health · metrics` | Unauthenticated probes of a relay (health + ready / Prometheus gauges) |
@@ -58,6 +58,16 @@ retries refresh/recovery, then backs off exponentially (10→160 s, cap
 
 **`task wait`** polls until the task is terminal and prints the result —
 the scriptable building block for submit→wait workflows.
+
+**`task list`** (T-248) queries the relay task list with server-side
+filters: `--submitted-by <node_id>`, `--owner <node_id>`,
+`--status a,b[,c]`, `--since`/`--until` (ISO-8601, mapped to
+`created_since`/`created_until`). Options are passed through to
+`GET /relay/v2/scheduler/tasks` (T-268) — the relay validates everything
+(unknown status or bad timestamp → `422`; a non-admin passing a foreign
+`--submitted-by`/`--owner` id → `400`). `--json` prints the full relay
+payload; plain output renders `task_id  name  status  created_at
+sender -> owner` newest first.
 
 **`docs`:** flat slugs (e.g. `node-cli docs node-setup`, `docs
 reference-api`) — the index shape and slug stability are a compatibility

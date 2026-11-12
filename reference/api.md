@@ -53,7 +53,7 @@ Heartbeat body reference: [worked examples](#worked-examples-curl) below.
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/relay/v2/scheduler/tasks` | `rt_…` | Submit a task DAG |
-| GET | `/relay/v2/scheduler/tasks` | `rt_…` | List tasks |
+| GET | `/relay/v2/scheduler/tasks` | `rt_…` | List tasks — filterable by `status` (comma-separated), `submitted_by`, `owner_node_id`, `created_since`, `created_until` (T-268) |
 | GET | `/relay/v2/scheduler/tasks/{task_id}` | `rt_…` | Task detail (stages, artifacts, notes) |
 | POST | `/relay/v2/scheduler/task-simple` | `rt_…` | Submit a single-stage task |
 | POST | `/relay/v2/scheduler/claim` | `rt_…` | Claim one pending stage — response includes `capability_details` when metadata was advertised |
@@ -425,6 +425,31 @@ curl -s -X POST "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks" \
 Errors: `422` (payload > max, priority out of 0–10); `404` unknown
 capability (task-simple) or unknown `depends_on` id. task-simple queues
 pending while the capability is busy (T-229) — no 503.
+
+### List task filters (T-268)
+
+```bash
+# Sender view: everything this node submitted, newest first
+curl -s -H "Authorization: Bearer ***" \
+  "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks?submitted_by=<node_id>" | jq
+
+# Combine filters (AND), status accepts a comma-separated union
+curl -s -H "Authorization: Bearer ***" \
+  "http://${RELAY_HOST}:8788/relay/v2/scheduler/tasks?submitted_by=<node_id>&status=failed,cancelled&created_since=2026-11-01T00:00:00Z" | jq
+```
+
+Filter rules:
+- `status`: comma-separated union of `pending,running,completed,failed,cancelled`
+  (single value backwards compatible). Unknown values → `422` — filters are
+  never silently ignored.
+- `submitted_by` / `owner_node_id`: exact-match equality filters. Admins may
+  use any node id; non-admin clients may only pass **their own** id — a
+  different value answers `400` (never rewritten, never widened).
+- `created_since` / `created_until`: ISO-8601 timestamps (naive treated as
+  UTC, `Z` accepted), SQL-side `created_at` bounds. Invalid → `422`.
+- Filters AND-combine and only narrow the T-005g/T-227 readable set — they
+  never extend it.
+
 
 ### Forward routing
 
