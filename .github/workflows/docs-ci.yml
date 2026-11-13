@@ -59,7 +59,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          DOCS_SHA="$(git rev-parse HEAD)"
+          DOCS_SHA="$(gh api repos/iowap-org/iowap-docs/commits/main --jq '.sha')"
           SERVER_SHA="$(gh api repos/iowap-org/iowap-server/contents/docs --jq '.sha')"
           echo "docs main HEAD:  $DOCS_SHA"
           echo "server gitlink:  $SERVER_SHA"
