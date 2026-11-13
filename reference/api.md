@@ -426,7 +426,7 @@ Errors: `422` (payload > max, priority out of 0–10); `404` unknown
 capability (task-simple) or unknown `depends_on` id. task-simple queues
 pending while the capability is busy (T-229) — no 503.
 
-### List task filters (T-268)
+### List tasks with filters
 
 ```bash
 # Sender view: everything this node submitted, newest first
