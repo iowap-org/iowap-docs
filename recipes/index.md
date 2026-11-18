@@ -26,7 +26,8 @@ What changes between recipes is only step 1 — the shape of the wrapper:
 |---|---|---|---|
 | [Wrap an HTTP service](wrap-http-service.md) | network call | maps the payload to an OpenAI-compatible `/audio` or REST call | `stt.ai` / `tts.ai` (whisper + tts-1) |
 | [Wrap a local binary](wrap-local-binary.md) | subprocess + artifacts | runs a local model binary, uploads the output file as an artifact | `image.generate.mflux` (FLUX on Apple silicon) |
-| [Agent-to-agent chat](agent-to-agent-chat.md) | inbox capability + bridge adapter | writes inbound agent messages to a file inbox; replies are tasks | `a2a.inbox` across three agents |
+| [Agent-to-agent chat](agent-to-agent-chat.md) | inbox capability + bridge adapter |
+| [A long-running orchestrator](long-running-orchestrator.md) | long_run lease + forward slot + fan-out | runs a whole pipeline, planner injected by the operator | `flow.run` (flow-runner) | writes inbound agent messages to a file inbox; replies are tasks | `a2a.inbox` across three agents |
 
 The full deployment behind this catalog spans further patterns — long-running
 workflows (`paperless.watch` → `flow.run`), device control (the `ha.*`

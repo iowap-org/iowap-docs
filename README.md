@@ -32,6 +32,7 @@ recipes/                      # HOW — capability recipes (one skeleton, many p
 ├── index.md                  #   The skeleton + pattern catalog from the live deployment
 ├── wrap-http-service.md      #   HTTP service → capability (stt.ai/tts.ai/paperless.*)
 ├── wrap-local-binary.md      #   Local binary → capability + artifact return (mflux)
+├── long-running-orchestrator.md #   flow.run pattern: long_run lease + forward slots + fan-out
 └── agent-to-agent-chat.md    #   a2a.inbox + bridge adapter = agent chat
 ├── flow.md                   #   Flows: dumb-Kanban orchestration via flow.run
 ├── tokens.md                 #   Credential families
