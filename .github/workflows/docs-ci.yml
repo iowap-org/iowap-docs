@@ -69,10 +69,13 @@ jobs:
           fi
           N="$(gh api "repos/iowap-org/iowap-docs/compare/${SERVER_SHA}...${DOCS_SHA}" --jq '.ahead_by' 2>/dev/null || echo '?')"
           if [ "$N" = "1" ]; then
-            printf 'server submodule behind docs main by 1 (gitlink %s != %s) — bump server\n' "$SERVER_SHA" "$DOCS_SHA"
+            printf '::warning::server submodule behind docs main by 1 (gitlink %s != %s) — push-race window: the operator bump usually lands seconds later; auto-sync via gitlink-sync (hourly + dispatch)\n' "$SERVER_SHA" "$DOCS_SHA"
           elif [ "$N" = "?" ] || [ "$N" = "0" ]; then
-            printf 'server submodule %s out of sync with docs main (%s) — bump server\n' "$SERVER_SHA" "$DOCS_SHA"
+            printf '::warning::server submodule %s out of sync with docs main (%s) — bump server (gitlink-sync, hourly + dispatch)\n' "$SERVER_SHA" "$DOCS_SHA"
           else
-            printf 'server submodule behind docs main by %s (gitlink %s != %s) — bump server\n' "$N" "$SERVER_SHA" "$DOCS_SHA"
+            printf '::warning::server submodule behind docs main by %s (gitlink %s != %s) — bump server (gitlink-sync, hourly + dispatch)\n' "$N" "$SERVER_SHA" "$DOCS_SHA"
           fi
-          exit 1
+          # Warning, not a gate failure: every docs push raced this check at
+          # least three times (2026-11-18) — the operator bump lands seconds
+          # later and the run is stale-red. The gitlink-sync workflow
+          # (iowap-server, hourly + workflow_dispatch) is the remediation.
