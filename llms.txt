@@ -24,6 +24,12 @@
 - [concepts/a2a-bridge](concepts/a2a-bridge.md): agent-to-agent via the bridge-adapter file contract — inbox = ear, task = voice
 
 
+## Recipes (build a capability)
+- [recipes](recipes/index.md): capability recipes — the one skeleton (handler → profile → publish → probe) plus the pattern catalog from the live deployment
+- [recipes/wrap-http-service](recipes/wrap-http-service.md): wrap an HTTP service (stt.ai/tts.ai/paperless.* pattern) — payload → call → result envelope
+- [recipes/wrap-local-binary](recipes/wrap-local-binary.md): wrap a local model binary and return files (image.generate.mflux pattern) — subprocess + hp put artifacts
+- [recipes/agent-to-agent-chat](recipes/agent-to-agent-chat.md): agent-to-agent chat via a2a.inbox + the bridge adapter (inbox = ear, task = voice)
+
 ## Agent clients (consumer side)
 - [clients/mcp](clients/mcp.md): MCP toolkit for agents — install, client wiring, 7-tool reference, security boundary
 

@@ -28,6 +28,11 @@ concepts/                     # WHY/WAS — one page per model term
 ├── capabilities.md           #   Routing keys, naming, ladder
 ├── tasks.md                  #   Task/stage lifecycle, status system
 ├── a2a-bridge.md             #   Agent-to-agent via the bridge-adapter file contract
+recipes/                      # HOW — capability recipes (one skeleton, many patterns)
+├── index.md                  #   The skeleton + pattern catalog from the live deployment
+├── wrap-http-service.md      #   HTTP service → capability (stt.ai/tts.ai/paperless.*)
+├── wrap-local-binary.md      #   Local binary → capability + artifact return (mflux)
+└── agent-to-agent-chat.md    #   a2a.inbox + bridge adapter = agent chat
 ├── flow.md                   #   Flows: dumb-Kanban orchestration via flow.run
 ├── tokens.md                 #   Credential families
 ├── artifacts.md              #   Transfer ladder (inline/artifact/bridge)
