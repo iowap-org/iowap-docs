@@ -77,7 +77,7 @@ A federation node knows no remote relay endpoints. It knows the
 and addresses a recipient on one of them:
 
 ```
-email~ronny.pietschke@icloud.com
+email~peter@icloud.com
 nextcloud~peter
 ```
 
