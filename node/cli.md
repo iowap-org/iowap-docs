@@ -5,11 +5,11 @@ Every command, verified against the argparse tree in
 `iowap-cli <command> <action> --help` is the complete source of truth —
 this page documents structure, defaults, and behaviour.
 
-> **Compatibility:** the wheel still installs the older console-script
-> names `node-cli` and `node-daemon` as aliases — they run the same
-> entry points as `iowap-cli` and `iowap-daemon` (usage strings follow
-> the invoked name). This documentation shows the `iowap-*` names
-> throughout; no sunset date is fixed.
+> **Compatibility (sunset 2.3.43):** the legacy console-script names
+> `node-cli` and `node-daemon` were **removed** in iowap-node 2.3.43 —
+> only `iowap-cli` and `iowap-daemon` are installed. Update any scripts
+> that still call the old names; there are no aliases and no deprecation
+> shim.
 
 ## Global flags
 
