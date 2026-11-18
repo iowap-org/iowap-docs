@@ -52,22 +52,22 @@ is unset — pin the URL for fixed installations.
 ## Submitting a flow
 
 ```bash
-node-cli task submit \
+iowap-cli task submit \
   --stage "flow.run:{\"task\": \"Create 3 product images and zip them\"}" | jq
 # -> {"task_id": "tsk_...", "status": "pending"}
-node-cli task wait <task_id> --interval 15 | jq
+iowap-cli task wait <task_id> --interval 15 | jq
 # -> {status:"completed", ...}
 ```
 
 The result carries `{flow: ..., aggregate: {task_ref: result, …},
 summary: …}`. Watch progress live: keepalive notes on the origin task
-(`node-cli task result <task_id>`) and every child as an ordinary task in
+(`iowap-cli task result <task_id>`) and every child as an ordinary task in
 the scheduler view.
 
 Re-run a catalog flow:
 
 ```bash
-node-cli task submit \
+iowap-cli task submit \
   --stage 'flow.run:{"mode": "run_flow", "flow": "weekly-report",
            "input": {"path": "/data/report.html"}}' | jq
 ```
@@ -108,8 +108,8 @@ via the binding default separator.
 ## Verification
 
 ```bash
-node-cli node info flow-runner   # capability + status live
-node-cli task result <origin_id> # aggregate + summary after completion
+iowap-cli node info flow-runner   # capability + status live
+iowap-cli task result <origin_id> # aggregate + summary after completion
 ```
 
 ## Troubleshooting

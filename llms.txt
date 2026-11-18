@@ -40,11 +40,11 @@
 - [node/config](node/config.md): node.yaml, profiles.d, relay_config.json, file map
 - [node/tokens](node/tokens.md): refresh/recovery flows, local credential files
 - [node/capabilities](node/capabilities.md): profile anatomy, handler, chat.ai vs agent.ai, dynamic routes, temp bridge routes
-- [node/cli](node/cli.md): full command tree + behaviours of node-cli
+- [node/cli](node/cli.md): full command tree + behaviours of iowap-cli
 - [node/handlers/contract](node/handlers/contract.md): normative request/response envelope, tolerance table, result_path_hints
 - [node/handlers/primitives](node/handlers/primitives.md): hp put/get, __iowap_ref__ envelopes, complete_by_script
 - [node/integrations/home-assistant](node/integrations/home-assistant.md): HAOS app + integration, capability matrix, submit_task
-- [node/integrations/hermes](node/integrations/hermes.md): desktop chip/pane/task pages, node-cli backend
+- [node/integrations/hermes](node/integrations/hermes.md): desktop chip/pane/task pages, iowap-cli backend
 
 ## Storage (ops)
 - [storage/storage](storage/storage.md): capabilities, bridge server, channels, backups/retention, tar transfer
@@ -55,7 +55,7 @@
 
 ## Reference (look-up)
 - [reference/api](reference/api.md): endpoint tables (auth/discovery/scheduler/storage/routes/dashboard/admin/docs) + worked cURL examples
-- [reference/cli](reference/cli.md): every node-cli command, subcommand, flag + help — generated from the live argparse tree
+- [reference/cli](reference/cli.md): every iowap-cli command, subcommand, flag + help — generated from the live argparse tree
 - [reference/database-backends](reference/database-backends.md): SQLAlchemy Core layer, migrations, adding a backend
 - [reference/design-board](reference/design-board.md): historical design records
 - [docs/format-discussion-draft](docs/format-discussion-draft.md): README-format decision draft for the iowap-org repos — 6 open points, positions + recommendations

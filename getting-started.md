@@ -9,11 +9,11 @@ in order.
 git clone https://github.com/iowap-org/iowap-node.git && cd iowap-node
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
-node-cli relay set --server-url http://<relay>:8788
-node-cli node register <relay>:8788 --name my-node
+iowap-cli relay set --server-url http://<relay>:8788
+iowap-cli node register <relay>:8788 --name my-node
 # approve in the dashboard, then:
-node-cli capabilities validate default && node-cli capabilities publish default
-node-cli daemon foreground
+iowap-cli capabilities validate default && iowap-cli capabilities publish default
+iowap-daemon
 ```
 
 Full walkthrough: [node setup](node/setup.md). Next stops:
@@ -41,7 +41,7 @@ Start with the [API reference](reference/api.md) (auth → register →
 heartbeat → claim → complete); the "Register a node" worked example there
 shows how to grab a first token. Watch progress on the
 SSE stream.
-The `node-cli` is itself an API client — [CLI reference](node/cli.md).
+The `iowap-cli` is itself an API client — [CLI reference](node/cli.md).
 
 ## 5. I want to build a capability / handler
 

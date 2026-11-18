@@ -10,7 +10,7 @@ Two things are called "envelope" in this codebase — they are unrelated
 | Term | Mechanism | Reference |
 |------|-----------|-----------|
 | **Handler result envelope** (this page) | Standard request/response wrapper around every handler invocation | here |
-| **Transfer envelope** (`__iowap_ref__`) | Opt-in file transfer for `node-cli hp put/get` | [handler primitives](primitives.md) |
+| **Transfer envelope** (`__iowap_ref__`) | Opt-in file transfer for `iowap-cli hp put/get` | [handler primitives](primitives.md) |
 
 ## Request envelope (daemon → handler stdin)
 

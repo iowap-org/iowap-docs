@@ -297,7 +297,7 @@ agent bootstrap index raw (text/plain, not rendered). There is no root
 | GET | `/relay/v2/docs/{slug}` | none | Render one document as HTML (not in openapi.json — include_in_schema=False) |
 | GET | `/relay/v2/docs/llms.txt` | none | Deliver `llms.txt` raw (text/plain, not rendered) (not in openapi.json — include_in_schema=False) |
 
-That's what `node-cli docs` consumes.
+That's what `iowap-cli docs` consumes.
 
 ## Worked examples (cURL)
 

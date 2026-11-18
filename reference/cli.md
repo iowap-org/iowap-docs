@@ -1,4 +1,4 @@
-## CLI Reference (node-cli)
+## CLI Reference (iowap-cli)
 
 Every command, subcommand, flag and its help of the **node** CLI — generated **from the live argparse tree** (the parser is the contract): this page matches the executable that ships from the same tree. Narrative flows live in [node/cli](../node/cli.md); the relay's HTTP surface in [api](api.md).
 
@@ -13,7 +13,6 @@ Every command, subcommand, flag and its help of the **node** CLI — generated *
 
 | Command | Purpose |
 |---|---|
-| `daemon` | Control the background daemon. |
 | `heartbeat` | Send a single heartbeat and exit. |
 | `claim` | Claim one stage for a capability. |
 | `complete` | Complete a claimed stage. |
@@ -32,32 +31,6 @@ Every command, subcommand, flag and its help of the **node** CLI — generated *
 | `docs` | Read relay documentation from the server (list all, or print one). |
 | `update` | Check for and apply self-updates (PyPI-first, GitHub fallback). |
 | `mcp` | Manage the local MCP toolkit (iowap-client-mcp). |
-
-### `daemon`
-
-Control the background daemon.
-
-#### `daemon start`
-
-*(no additional arguments — global flags apply)*
-
-#### `daemon stop`
-
-*(no additional arguments — global flags apply)*
-
-#### `daemon restart`
-
-*(no additional arguments — global flags apply)*
-
-#### `daemon foreground`
-
-*(no additional arguments — global flags apply)*
-
-#### `daemon status`
-
-show daemon status
-
-*(no additional arguments — global flags apply)*
 
 ### `heartbeat`
 
@@ -124,6 +97,18 @@ Append a free-form note to a task (T-052 mini-chat).
 |---|---|
 | ``task_id`` | Task ID to add a note to. *(positional)* |
 | ``message`` | Note text (1..2000 characters). *(positional)* |
+
+#### `task list`
+
+List/query tasks on the relay (server-side filters).
+
+| Argument/Flag | Meaning |
+|---|---|
+| `--submitted-by` | Filter: node ID that submitted the task (submitted_by). |
+| `--owner` | Filter: node ID that must claim the task (owner_node_id). |
+| `--status` | Filter: comma-separated status values, e.g. pending,claimed (passed through unvalidated; the relay validates). |
+| `--since` | Filter: tasks created at/after this ISO-8601 timestamp (created_since). |
+| `--until` | Filter: tasks created at/before this ISO-8601 timestamp (created_until). |
 
 ### `capabilities`
 
@@ -384,11 +369,11 @@ Handler primitives for handler scripts (T-179).
 
 #### `hp put`
 
-Wrap a local file as an envelope (ladder-negotiated).
+Wrap a local file as an envelope (ladder-negotiated; the bridge rung moves the file into the serve dir and deletes it after transfer).
 
 | Argument/Flag | Meaning |
 |---|---|
-| ``path`` | Path to the local file to wrap. *(positional)* |
+| ``path`` | Path to the local file to wrap (the bridge rung moves the file into the serve dir — the source is gone after a successful bridge put). *(positional)* |
 | `--cap` | Receiving capability (decides upload modes). |
 | `--name` | Override filename inside the envelope. |
 

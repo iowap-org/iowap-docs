@@ -13,7 +13,7 @@ The daemon reads **only** this file at runtime.
 # ~/.relay/node.yaml
 node_name: felix-cyberfox
 description: "Local AI worker"
-status: busy                     # operator request (better: node-cli node busy)
+status: busy                     # operator request (better: iowap-cli node busy)
 
 budget: 10                       # claim-admission points (unset = points axis off)
 
@@ -31,9 +31,9 @@ capabilities:
 
 | Key | Meaning |
 |-----|---------|
-| `node_name` | Friendly name, forwarded in every heartbeat, shown in dashboard + `node-cli node list` |
+| `node_name` | Friendly name, forwarded in every heartbeat, shown in dashboard + `iowap-cli node list` |
 | `description` | Free-form prose (max 1024 chars), forwarded in every heartbeat |
-| `status` | Operator request: `busy` / `idle` / `online` — prefer `node-cli node busy`/`idle`/`clear-status` which write it safely |
+| `status` | Operator request: `busy` / `idle` / `online` — prefer `iowap-cli node busy`/`idle`/`clear-status` which write it safely |
 | `budget` | Points budget for claim admission: a claim needs the `max_parallel` headroom **and** the running points plus its capability's `cost` to stay within the budget (points released when the stage ends); unset = points axis off |
 | `capabilities` | Optional list — a node can run with no capabilities and gain them at runtime |
 
@@ -98,10 +98,10 @@ cat > ~/.relay/profiles.d/default.yaml <<'YAML'
 capabilities: []
 YAML
 
-node-cli capabilities validate default      # checks without touching active
-node-cli capabilities publish default       # atomic write to node.yaml (+ SIGHUP)
-node-cli capabilities diff                  # working profile vs active (incl. cost)
-node-cli capabilities current               # active profile name
+iowap-cli capabilities validate default      # checks without touching active
+iowap-cli capabilities publish default       # atomic write to node.yaml (+ SIGHUP)
+iowap-cli capabilities diff                  # working profile vs active (incl. cost)
+iowap-cli capabilities current               # active profile name
 ```
 
 The daemon never touches `profiles.d/` at runtime. Validation rejects
@@ -110,14 +110,14 @@ the active profile is untouched.
 
 ## `~/.relay/relay_config.json`
 
-Daemon transport config (created by `node-cli relay set`, overridable by
+Daemon transport config (created by `iowap-cli relay set`, overridable by
 env — env wins):
 
 | Key (JSON) | Env | Default | Meaning |
 |-----------|-----|---------|---------|
 | `base_url` | `RELAY_BASE_URL` | `null` | Relay URL; `null` enables mDNS discovery fallback |
 | `heartbeat_interval` | `RELAY_HEARTBEAT_INTERVAL` | `8` | Seconds between heartbeats |
-| `claim_interval` | `RELAY_CLAIM_INTERVAL` | `5` | Polling-claim cadence (node-cli daemon) |
+| `claim_interval` | `RELAY_CLAIM_INTERVAL` | `5` | Polling-claim cadence (`iowap-daemon --mode poll`) |
 | `backfill_interval` | `RELAY_BACKFILL_INTERVAL` | `60` | Periodic sweep of the SSE daemon (0 = off) |
 | `status_interval` | — | `7200` | Status-flush cadence |
 | `rs_refresh_interval_seconds` | `RELAY_RS_REFRESH_INTERVAL` | `86400` | Registration-secret rotation |

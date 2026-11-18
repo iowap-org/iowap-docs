@@ -81,7 +81,7 @@ siblings stay available. Full status system: [tasks](tasks.md).
 
 ### Busy mode (manual + automatic)
 
-- **Manual:** `node-cli node busy` / `node idle` / `node clear-status` —
+- **Manual:** `iowap-cli node busy` / `node idle` / `node clear-status` —
   the request persists in the node state file and rides every heartbeat.
 - **Automatic (load):** at or above its `load_cap` for
   `auto_busy_consecutive_heartbeats` (default 3) consecutive heartbeats →

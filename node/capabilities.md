@@ -29,9 +29,9 @@ capabilities:
           description: "The instruction or question."
 YAML
 
-node-cli capabilities validate default   # never touches the active profile
+iowap-cli capabilities validate default   # never touches the active profile
 # -> profile is valid
-node-cli capabilities publish default    # atomic write to node.yaml
+iowap-cli capabilities publish default    # atomic write to node.yaml
 # -> published (daemon picks it up at the next heartbeat or via SIGHUP)
 ```
 
@@ -40,9 +40,9 @@ Publish flow:
 ```
 Operator edits profiles.d/default.yaml
         ↓
-node-cli capabilities validate default    ← validates without touching active
+iowap-cli capabilities validate default    ← validates without touching active
         ↓
-node-cli capabilities publish default     ← atomic write to node.yaml + SIGHUP
+iowap-cli capabilities publish default     ← atomic write to node.yaml + SIGHUP
         ↓
 Daemon heartbeats the new capabilities (or reloads on SIGHUP)
 ```
@@ -57,7 +57,7 @@ keys (unknown top-level keys pass validation; only unknown keys *inside*
 a capability block are rejected):
 
 - `status` — operator busy/idle state, managed by
-  `node-cli node busy|idle|clear-status` (the CLI edits the active YAML
+  `iowap-cli node busy|idle|clear-status` (the CLI edits the active YAML
   as text and preserves the rest of the document verbatim).
 - `budget` — optional points budget (integer) for claim admission: a
   claim is admitted only when the capability's headroom under
@@ -65,7 +65,7 @@ a capability block are rejected):
   `budget`) are both free. An invalid hand-edited value in the active
   file degrades to "axis off" — `validate`/`publish` are the loud path.
 - `node_name`, `description` — node overrides.
-- `node_cli_path` — **maintained by node-cli itself** (since wheel
+- `node_cli_path` — **maintained by iowap-cli itself** (since wheel
   2.3.20, T-226): every invocation and the daemon start stamp their own
   absolute console-script path as the top-level key; `capabilities
   publish` re-stamps after its byte-exact copy. The write is
@@ -100,12 +100,12 @@ Validation rejects negative or non-integer `cost` and `budget`
 publish:
 
 ```bash
-node-cli capabilities validate default
+iowap-cli capabilities validate default
 # ->   - chat.ai v1.0.0 auto_publish=True claimable=True max_parallel=2 cost=1 timeout=300
 ```
 
 ```bash
-node-cli capabilities info agent.ai
+iowap-cli capabilities info agent.ai
 # -> Local node:  cost=1, max_parallel=1
 # -> Node budget: (unset — points axis off)
 ```
@@ -211,11 +211,11 @@ the ladder uses **temp routes**: TTL-capped (default 24 h), tied to a
 watchdog:
 
 ```bash
-node-cli route register --path /upload/x --method POST \
+iowap-cli route register --path /upload/x --method POST \
     --upstream http://192.0.2.55:8791/upload/x \
     --ttl 3600 --channel ch_x
-node-cli route unregister --path /upload/x --method POST
-node-cli route list    # only this node's own routes
+iowap-cli route unregister --path /upload/x --method POST
+iowap-cli route list    # only this node's own routes
 ```
 
 The full storage-channel flow (who calls what, streaming hop by hop):
@@ -251,7 +251,7 @@ Rules:
   slot into a capability name and never advertises anything for it.
 - The `forward` pseudo-capability is **never advertised** by a node: a
   profile declaring a capability named `forward` is rejected by
-  `node-cli capabilities validate` / `publish`.
+  `iowap-cli capabilities validate` / `publish`.
 - Heartbeat, handlers, and the daemon are untouched — a redirected task
   behaves like any normal task of the resolved target. The claiming
   handler receives the **resolved** capability and a payload without the
@@ -261,7 +261,7 @@ Rules:
 
 ```bash
 # "I need my dependency 2" — the relay resolves the target capability:
-node-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
+iowap-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
 ```
 
 `--forward-slot` replaces the `--stage` capability with `forward` and
@@ -284,7 +284,7 @@ problems, so they are never retried automatically.
 |---|---|---|
 | `422 forward_mapping_missing` | no mapping for `(node, slot)` | open the relay dashboard (node profile → Forward mappings) and configure the mapping |
 | `422 forward_mapping_invalid` | slot malformed/too long | do **not** retry — fix the slot value or the mapping |
-| `404 forward_node_unknown` | submitter node not registered | `node-cli node register` again |
+| `404 forward_node_unknown` | submitter node not registered | `iowap-cli node register` again |
 | `422 target_unknown_capability` | mapping target not in the capability catalog | stale mapping — ask the operator to update it |
 | `400 redirect_self` | mapping points at `forward` itself | operator must fix the mapping target |
 
@@ -298,11 +298,11 @@ The server-side story (mapping management, semantics, dashboard UI):
 ## Verification
 
 ```bash
-node-cli capabilities current
+iowap-cli capabilities current
 # -> current profile: default
-node-cli heartbeat --json | python3 -m json.tool | head
+iowap-cli heartbeat --json | python3 -m json.tool | head
 # -> capabilities list as sent to the relay (identity + metadata)
-node-cli capabilities server --json    # what the server has stored for this node
+iowap-cli capabilities server --json    # what the server has stored for this node
 ```
 
 ## Troubleshooting

@@ -46,19 +46,19 @@ pip install -e .
 ```
 
 ```bash
-node-cli --help | head -3
-# -> usage: node-cli ...    (console script from [project.scripts])
+iowap-cli --help | head -3
+# -> usage: iowap-cli ...    (console script from [project.scripts])
 ```
 
 No submodules, no server checkout needed — the CLI reads docs from the
-relay at runtime (`node-cli docs`), not locally.
+relay at runtime (`iowap-cli docs`), not locally.
 
 ## 2. Point the node at the relay
 
 Either pin the relay URL once (recommended for fixed installs):
 
 ```bash
-node-cli relay set --server-url http://192.0.2.10:8788
+iowap-cli relay set --server-url http://192.0.2.10:8788
 ```
 
 …or let the node **discover** the relay over mDNS on every fallback
@@ -66,8 +66,8 @@ node-cli relay set --server-url http://192.0.2.10:8788
 server's config, and nothing strips mDNS on the LAN):
 
 ```bash
-node-cli relay set --discover
-node-cli relay discover --timeout 5
+iowap-cli relay set --discover
+iowap-cli relay discover --timeout 5
 # -> http://192.0.2.10:8788
 ```
 
@@ -79,8 +79,8 @@ state file).
 ## 3. Register
 
 ```bash
-node-cli node register 192.0.2.10:8788        # host:port or URL
-node-cli node register http://192.0.2.10:8788 --name my-node --json
+iowap-cli node register 192.0.2.10:8788        # host:port or URL
+iowap-cli node register http://192.0.2.10:8788 --name my-node --json
 # Re-registering an existing identity requires --force
 ```
 
@@ -132,9 +132,9 @@ capabilities:
     timeout: 300
 YAML
 
-node-cli capabilities validate default
+iowap-cli capabilities validate default
 # -> profile is valid
-node-cli capabilities publish default      # atomic write to node.yaml
+iowap-cli capabilities publish default      # atomic write to node.yaml
 # -> published
 ```
 
@@ -146,29 +146,25 @@ it (no `budget` = that axis is off).
 
 ## 6. Run the daemon
 
-Two daemons exist — SSE-driven and polling; comparison and when to pick
-which: [operations](operations.md). Foreground first, then as a service:
+One daemon binary — `iowap-daemon` — with two modes: SSE-driven (default)
+and legacy claim/heartbeat polling; comparison and when to pick which:
+[operations](operations.md). Foreground first, then as a service:
 
 ```bash
-# Foreground (test)
-node-cli daemon foreground
-# or the standalone SSE daemon:
-node-daemon --foreground
-
-# Background (PID file + log under ~/.relay/):
-node-cli daemon start
+# Foreground (test):
+iowap-daemon                # SSE-driven (default)
+iowap-daemon --mode poll    # legacy claim/heartbeat polling
 ```
 
-systemd user unit (example):
+Backgrounding is a service manager's job — systemd user unit (example):
 
 ```ini
 [Unit]
 Description=IOWAP Node
 
 [Service]
-Environment=RELAY_BASE_URL=http://192.0.2.10:8788
 UMask=0077
-ExecStart=%h/iowap-node/.venv/bin/node-cli daemon foreground
+ExecStart=%h/iowap-node/.venv/bin/iowap-daemon --foreground --mode sse
 Restart=always
 RestartSec=10
 
@@ -177,18 +173,18 @@ WantedBy=default.target
 ```
 
 ```bash
-mkdir -p ~/.config/systemd/user && cp unit-file ~/.config/systemd/user/iowap-node.service
-systemctl --user daemon-reload && systemctl --user enable --now iowap-node.service
+mkdir -p ~/.config/systemd/user && cp unit-file ~/.config/systemd/user/iowap-daemon.service
+systemctl --user daemon-reload && systemctl --user enable --now iowap-daemon.service
 ```
 
 ## Verification
 
 ```bash
-node-cli heartbeat && node-cli status
+iowap-cli heartbeat && iowap-cli status
 # -> status file written; last heartbeat visible
 cat ~/.relay/worker_status.json
 # -> {"status": ..., "auth_loop": false, ...}
-systemctl --user is-active iowap-node.service
+systemctl --user is-active iowap-daemon.service
 # -> active
 ```
 
@@ -207,16 +203,16 @@ automatically: `chmod 600 ~/.relay/iowap-agent.token ~/.relay/iowap-agent.json`
 | `403` on claim | Capability not in the latest heartbeat — check profile + `auto_publish: true` |
 | `404` on refresh | Wrong base_url, or the node was deleted — re-register |
 | Node stays `pending` | Admin must approve (dashboard/admin API) |
-| Node `offline` | Daemon down or heartbeat interval wrong — `systemctl --user status`, `tail ~/.relay/node-cli.log` |
+| Node `offline` | Daemon down or heartbeat interval wrong — `systemctl --user status iowap-daemon.service`, `journalctl --user -u iowap-daemon.service` (foreground runs log to the console) |
 | Both credentials expired | Re-register |
 | Daemon exits under systemd | Absolute paths in `ExecStart`, `WorkingDirectory`, `User=` owning `~/.relay` |
-| Daemon won't claim | No `claimable: true` capability or handler missing — `node-cli capabilities validate` |
+| Daemon won't claim | No `claimable: true` capability or handler missing — `iowap-cli capabilities validate` |
 | Handler timeout | Raise the profile's `timeout:` |
 | mDNS unreachable | Pin `base_url` instead; check Avahi/reflector |
 
 ## Related pages
 
-- [operations](operations.md) — daemon variants, status, maintenance
+- [operations](operations.md) — daemon modes, status, maintenance
 - [capabilities how-to](capabilities.md) — profiles in depth
 - [token operations](tokens.md) — refresh and recovery
 - [CLI reference](cli.md) — every command

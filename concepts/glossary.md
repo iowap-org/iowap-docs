@@ -38,4 +38,4 @@ exactly these terms — humans and AI readers can rely on one vocabulary.
 | **Self-care pattern** | A node without reasoning posts a decision task for a reasoning capability instead of deciding itself. |
 | **Aggregate** | A flow's join result: `{task_ref: result, …}` per child task, returned on the origin task. |
 | **Catalog / history** | The flow runner's saved plans (named, reusable) and automatic run records. |
-| **node-cli** | The node's command-line tool: registration, daemon, status, tasks, files, routes. See [CLI reference](../node/cli.md). |
+| **iowap-cli** | The node's command-line tool: registration, status, tasks, files, routes. The daemon is the separate `iowap-daemon` script. See [CLI reference](../node/cli.md). |

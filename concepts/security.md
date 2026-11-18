@@ -33,7 +33,7 @@ overlays). The boundaries:
   network.
 - **Agent-facing MCP clients act with the host's node identity.** The
   optional MCP toolkit ([clients/mcp](../clients/mcp.md)) wraps the installed
-  `node-cli`: whoever may launch `iowap-mcp` on the host holds the node's
+  `iowap-cli`: whoever may launch `iowap-mcp` on the host holds the node's
   credentials — treat its launcher as part of the node trust boundary. Its
   file-writing tool writes where the caller points, so the MCP process's
   filesystem scope is part of the agent trust boundary. Capabilities can be

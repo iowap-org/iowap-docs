@@ -1,9 +1,15 @@
-# CLI Reference — `node-cli`
+# CLI Reference — `iowap-cli`
 
 Every command, verified against the argparse tree in
 `nodes/common/node_cli.py` (iowap-node). Per-flag details:
-`node-cli <command> <action> --help` is the complete source of truth —
+`iowap-cli <command> <action> --help` is the complete source of truth —
 this page documents structure, defaults, and behaviour.
+
+> **Compatibility:** the wheel still installs the older console-script
+> names `node-cli` and `node-daemon` as aliases — they run the same
+> entry points as `iowap-cli` and `iowap-daemon` (usage strings follow
+> the invoked name). This documentation shows the `iowap-*` names
+> throughout; no sunset date is fixed.
 
 ## Global flags
 
@@ -16,8 +22,7 @@ this page documents structure, defaults, and behaviour.
 
 | Command | Action | Purpose |
 |---------|--------|---------|
-| `daemon` | `start · stop · status · restart · foreground` | Control the background daemon (polling variant) |
-| `node-daemon` | *(own console script)* | SSE-driven daemon — see [operations](operations.md) |
+| `iowap-daemon` | `--foreground · --mode {sse,poll} · {status}` *(own console script)* | The node daemon (SSE by default) — see [operations](operations.md) |
 | `heartbeat` | — | Send a single heartbeat and exit |
 | `claim` | `--capability <cap>` | Claim one stage for a capability |
 | `complete` | `[stage_id] --result-file <f>` | Complete a claimed stage (IDs default to `RELAY_*` env) |
@@ -41,7 +46,7 @@ this page documents structure, defaults, and behaviour.
 **Exit codes:** `0` success · `1` server/API/decision error · `2` usage
 error (missing file, invalid arguments).
 
-**Registration:** `node-cli node register <host[:port]|url>` creates state
+**Registration:** `iowap-cli node register <host[:port]|url>` creates state
 files itself and writes nothing on failure; re-registering a live identity
 needs `--force` (409 otherwise).
 
@@ -50,7 +55,7 @@ needs `--force` (409 otherwise).
 retries refresh/recovery, then backs off exponentially (10→160 s, cap
 300 s) — see [operations](operations.md).
 
-**Task submission:** `node-cli task submit --capability <cap> --payload '
+**Task submission:** `iowap-cli task submit --capability <cap> --payload '
 <json>'` is the old spelling; current form is
 `task submit --stage "<capability>:<json>"` with optional
 `--priority`/`--owner`. Stage payload fields must match the capability's
@@ -69,7 +74,7 @@ filters: `--submitted-by <node_id>`, `--owner <node_id>`,
 payload; plain output renders `task_id  name  status  created_at
 sender -> owner` newest first.
 
-**`docs`:** flat slugs (e.g. `node-cli docs node-setup`, `docs
+**`docs`:** flat slugs (e.g. `iowap-cli docs node-setup`, `docs
 reference-api`) — the index shape and slug stability are a compatibility
 contract; list without argument shows every served page.
 
@@ -89,7 +94,7 @@ simple index can lag PyPI's edge, TTL minutes) the result is a retriable
 failure, never a lying success. `apply` with nothing to update is a clean
 no-op success (rc 0).
 
-**`mcp`** (`node-cli mcp install` / `node-cli mcp status`): installs and
+**`mcp`** (`iowap-cli mcp install` / `iowap-cli mcp status`): installs and
 verifies the MCP toolkit (`iowap-client-mcp`) into its own venv from PyPI
 (default `~/iowap-client-mcp/.venv`, `--venv`/`IOWAP_MCP_VENV` to place it)
 and reports the stdio command path as data — `status` shows discovery +
@@ -100,7 +105,7 @@ the same discovery chain.
 
 ## Forward submission
 
-`node-cli task submit` accepts `--forward-slot <slot>` (T-Forward): the
+`iowap-cli task submit` accepts `--forward-slot <slot>` (T-Forward): the
 `--stage` capability is replaced by the relay's `forward`
 pseudo-capability and the slot rides in the payload; the relay resolves
 `(this node, slot) → target capability` from its forward-mapping table and
@@ -112,17 +117,17 @@ a profile — the validator rejects it. Slot bookkeeping, rules and the
 full refusal table: [capabilities how-to → Forward slots](capabilities.md#forward-slots-forward-routing).
 
 ```bash
-node-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
+iowap-cli task submit --stage 'agent.ai:{"prompt": "gate decision please"}' --forward-slot 2
 # -> {"task_id": "T-…", "stage_id": "…", "status": "pending"}
 ```
 
 ## Verification
 
 ```bash
-node-cli status
+iowap-cli status
 # -> worker_status.json content (status, auth state, last heartbeat)
 
-node-cli server health --json
+iowap-cli server health --json
 # -> {"health": {...}, "ready": {...}} — no credentials needed
 ```
 
@@ -130,7 +135,7 @@ node-cli server health --json
 
 - [reference](../reference/cli.md) — every command/flag, parser-generated
 - [setup](setup.md) — install, register, first daemon
-- [operations](operations.md) — daemon variants, maintenance, backoff
+- [operations](operations.md) — daemon modes, maintenance, backoff
 - [capabilities how-to](capabilities.md) — profiles behind `capabilities` commands
 - [handler primitives](handlers/primitives.md) — the `hp` commands in depth
 - [storage bridge](../storage/storage.md) — `bridge upload/download` flow

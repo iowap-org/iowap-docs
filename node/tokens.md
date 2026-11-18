@@ -17,7 +17,7 @@ are migrated to the envelope on the next refresh automatically.
 ## Check lifetimes (read-only)
 
 ```bash
-node-cli status
+iowap-cli status
 # -> local view incl. token expiry and last heartbeat
 python3 -c "import json;print(json.load(open('$HOME/.relay/iowap-agent.token'))['expires_at'])"
 # -> 2026-10-16T12:00:00+00:00

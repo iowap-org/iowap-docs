@@ -1,49 +1,73 @@
 # Node Operations
 
-Day-to-day operation of a node: daemon variants, status control, and the
+Day-to-day operation of a node: daemon modes, status control, and the
 maintenance machinery. Setup: [setup](setup.md).
 
-## Daemon variants
+## Daemon modes
 
-Two daemons ship with iowap-node; both share the same config, token, and
-capability profile — only the claim mechanism differs:
+The daemon ships as one binary — `iowap-daemon` — with two modes; both
+share the same config, token, and capability profile — only the claim
+mechanism differs:
 
-| Aspect | `node-cli daemon` | `node-daemon` (SSE) |
-|--------|-------------------|---------------------|
-| Mechanism | Poll the claim endpoint (every `claim_interval`, default 5 s) | Subscribe to the event stream; claim on `task_created`/`stage_claimed` |
-| Latency | ≤ poll interval | Real-time |
-| Requests | ~720/h claim calls | 1 persistent stream + heartbeat |
-| Extra | — | Periodic backfill sweep (default 60 s) rescues missed one-shot events |
+| Aspect | `--mode sse` (default) | `--mode poll` |
+|--------|------------------------|---------------|
+| Mechanism | Subscribe to the event stream; claim on `task_created`/`stage_claimed` | Poll the claim endpoint (every `claim_interval`, default 5 s) |
+| Latency | Real-time | ≤ poll interval |
+| Requests | 1 persistent stream + heartbeat | ~720/h claim calls |
+| Extra | Periodic backfill sweep (default 60 s) rescues missed one-shot events | — |
+| PID + log | `~/.relay/node-daemon.pid` + `node-daemon.log` | `~/.relay/node-cli.pid` + `node-cli.log` |
 
-**Rule of thumb: SSE (`node-daemon`) first, polling as fallback.** Pick
-polling behind proxies/firewalls that break long-lived streams (symptom:
-constant reconnects while heartbeats succeed), on flaky mobile links, or
-for the simplest possible setup.
+**Rule of thumb: SSE first, polling as fallback.** Pick polling behind
+proxies/firewalls that break long-lived streams (symptom: constant
+reconnects while heartbeats succeed), on flaky mobile links, or for the
+simplest possible setup.
 
-**Never run both for the same node.** Both refresh the same runtime token
-— each refresh invalidates the other's (401 loops, duplicate execution).
-Both daemons check each other's PID file at startup and refuse to run
-together; a stale PID file from a crashed process does not block.
+**Never run both modes for the same node.** Both refresh the same runtime
+token — each refresh invalidates the other's (401 loops, duplicate
+execution). Both modes check each other's PID file at startup and refuse
+to run together; a stale PID file from a crashed process does not block.
 
-Quick reference:
+## Starting and stopping
+
+The daemon always runs in the foreground — backgrounding is a service
+manager's job (systemd user unit pattern: [setup](setup.md)):
 
 ```bash
-node-cli daemon start        # background, PID+log under ~/.relay/
-node-cli daemon status
-node-cli daemon stop
-node-cli daemon foreground   # terminal foreground run
-
-node-daemon --foreground     # SSE variant, foreground
-systemctl --user enable --now iowap-node-daemon.service   # SSE variant as service
+iowap-daemon                    # start in the foreground (SSE, default)
+iowap-daemon --mode poll        # foreground, legacy claim/heartbeat polling
+systemctl --user enable --now iowap-daemon.service     # run as a service
+systemctl --user stop iowap-daemon.service             # stop the service
 ```
+
+A plain foreground run stops with `Ctrl+C` / `SIGTERM`.
+
+## Daemon status
+
+```bash
+iowap-daemon status             # same output via --status flag
+# -> pid: 899388
+# -> mode: sse
+# -> running: True
+# -> active_profile: default
+# -> last_heartbeat: 2026-11-18T15:48:58.745477+00:00
+# -> heartbeat_status: ok
+```
+
+Read-only (no relay client): a mode-aware view across both PID files
+(SSE `node-daemon.pid`, poll `node-cli.pid`); exit `0` with a live
+daemon, `1` when none runs. The same fields land in `worker_status.json`
+— its `daemon` entry names the invoked binary (`iowap-daemon`, or
+`node-daemon` under the legacy alias); the full dump also carries the
+task counters and the `in_flight` queue (`iowap-cli status` prints it
+all).
 
 ## Status control
 
 ```bash
-node-cli node busy          # stop claiming new stages; running ones continue
-node-cli node idle          # back to available
-node-cli node clear-status  # drop the operator request entirely
-node-cli node status        # local + server view (--json, --once supported)
+iowap-cli node busy          # stop claiming new stages; running ones continue
+iowap-cli node idle          # back to available
+iowap-cli node clear-status  # drop the operator request entirely
+iowap-cli node status        # local + server view (--json, --once supported)
 ```
 
 The request is written into `node.yaml` (text-preserving — comments and
@@ -68,7 +92,7 @@ an 8 s heartbeat tick never drops the stream for nothing. Manual flows:
 
 ## Auth-failure backoff
 
-`node-daemon` and `node-cli daemon` share the `RelayClient` self-healing:
+The daemon shares the `RelayClient` self-healing across both modes:
 
 - Token reload from file when a refresh + recovery fails;
 - Exponential backoff (10 → 20 → 40 → 80 → 160 s, max 300 s) from the
@@ -81,9 +105,9 @@ causes are independent of auth problems).
 
 ## Server health probe
 
-Both daemons probe `/health`, `/ready`, and `/metrics` on a 30 s cadence
+Both modes probe `/health`, `/ready`, and `/metrics` on a 30 s cadence
 (own thread — a hanging HTTP call never stalls heartbeats). Results land
-in `worker_status.json` and surface in `node-cli status`.
+in `worker_status.json` and surface in `iowap-cli status`.
 
 ## What it is NOT
 

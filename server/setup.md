@@ -54,7 +54,7 @@ relay-server --version
 
 > The `--recursive` flag matters: `docs/` is a git submodule pointing at
 > [iowap-org/iowap-docs](https://github.com/iowap-org/iowap-docs). The relay
-> serves it at `/relay/v2/docs/` — that is what `node-cli docs` reads. Left
+> serves it at `/relay/v2/docs/` — that is what `iowap-cli docs` reads. Left
 > it out? `git submodule update --init`.
 
 ## 2. Configure the session secret

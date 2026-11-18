@@ -5,14 +5,14 @@ server that gives any MCP-speaking AI agent (Hermes, OpenCode, …) a curated
 IOWAP toolset — without the agent having to learn the node CLI's pitfalls.
 
 The node CLI stays the source of truth for authentication and execution: the
-server shells out to `node-cli --json` and adds **zero credential handling of
+server shells out to `iowap-cli --json` and adds **zero credential handling of
 its own**. It runs as a plain MCP stdio subprocess spawned by the client
 (daemon-free, no port, no service unit).
 
 ## Install
 
 Requires an existing node installation on the same host
-([node/setup](../node/setup.md)) so `node-cli` is available; the server
+([node/setup](../node/setup.md)) so `iowap-cli` is available; the server
 resolves the binary via the node's own pin
 (`~/.relay/node.yaml` → `PATH` → known locations).
 
@@ -21,7 +21,7 @@ pip install "iowap-client-mcp[mcp]"
 ```
 
 Live on the [Python Package Index](https://pypi.org/project/iowap-client-mcp/)
-since 0.1.3 — or let a local node install it: `node-cli mcp install`
+since 0.1.3 — or let a local node install it: `iowap-cli mcp install`
 (own venv, client-neutral, PyPI registry — see [node CLI](../node/cli.md)
 under `mcp`). Pinned alternatives live on the
 [releases tab](https://github.com/iowap-org/iowap-client-mcp/releases) of
@@ -65,8 +65,8 @@ Typical loop: `capabilities_list` → pick capability + owning node ID →
 ## Updates
 
 The toolkit is a regular PyPI package — a local node keeps it current for
-free: `node-cli update check` reports the node wheel AND this toolkit;
-`node-cli update apply` upgrades both (the toolkit in its own venv, no
+free: `iowap-cli update check` reports the node wheel AND this toolkit;
+`iowap-cli update apply` upgrades both (the toolkit in its own venv, no
 service restart — a running `iowap-mcp` process reloads on the next client
 spawn). Manual path: `pip install --upgrade iowap-client-mcp[mcp]`.
 PyPI versions are immutable: every toolkit change ships as a version bump.

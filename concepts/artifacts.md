@@ -23,7 +23,7 @@ The three modes form a deterministic size-based ladder:
 | 3. `bridge` | streamed through a temp route to a storage node, payload carries `storage_ref` | larger files, RAM-bounded, needs a storage node |
 
 A capability's `upload_modes` field restricts which rungs it accepts; the
-CLI primitives (`node-cli file send`/`file get`, `hp put`/`hp get`) pick
+CLI primitives (`iowap-cli file send`/`file get`, `hp put`/`hp get`) pick
 the smallest supported rung automatically — see
 [capabilities](capabilities.md). The handler-side envelope format for
 transferring files is the `__iowap_ref__` marker — normative in

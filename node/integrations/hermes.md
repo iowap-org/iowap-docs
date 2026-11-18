@@ -9,7 +9,7 @@ no dashboard detour. Repo:
 
 The desktop app is **not an IOWAP node** — it is a control surface: it
 submits and watches tasks, it does not register as an executor. All data
-stays local: the plugin shells out to the local `node-cli` against your
+stays local: the plugin shells out to the local `iowap-cli` against your
 own relay — no third-party network calls, no telemetry.
 
 | Surface | What | Where |
@@ -24,23 +24,23 @@ own relay — no third-party network calls, no telemetry.
 
 ```text
 desktop renderer (plugin.js)        gateway process (plugin_api.py)        relay
-┌─────────────────────┐   ctx.rest  ┌──────────────────────────┐  node-cli  ┌───────┐
+┌─────────────────────┐   ctx.rest  ┌──────────────────────────┐ iowap-cli ┌───────┐
 │ chip / pane / page  │ ──────────► │ /api/plugins/iowap/fleet │ ─────────► │ :8788 │
 └─────────────────────┘             └──────────────────────────┘            └───────┘
 ```
 
 The frontend never touches relay HTTP or tokens. The backend
-(`/api/plugins/iowap/*`) shells out to `node-cli --json`, which owns all
+(`/api/plugins/iowap/*`) shells out to `iowap-cli --json`, which owns all
 relay auth and token handling (`~/.relay/*`) — tokens never enter the
 renderer.
 
 ## Prerequisites
 
 - Hermes Agent with the desktop app and plugin support
-- `node-cli` ([iowap-node](https://github.com/iowap-org/iowap-node), pip)
+- `iowap-cli` ([iowap-node](https://github.com/iowap-org/iowap-node), pip)
   on the desktop host. The backend resolves it without `PATH`
   assumptions: it reads the top-level `node_cli_path` key from
-  `~/.relay/node.yaml` first (self-stamped by node-cli since wheel
+  `~/.relay/node.yaml` first (self-stamped by iowap-cli since wheel
   2.3.20), then falls back to `PATH` and known install locations.
 - A registered, approved node identity on the relay —
   `~/.relay/iowap-agent.*` must exist (see [node setup](../setup.md));
@@ -94,7 +94,7 @@ verifies md5; frontend hot-reloads, backend edits need one app restart.
 
 - **Submit:** pick a task-type capability, enter the payload as JSON,
   optionally name the task — through the relay scheduler (task-simple
-  equivalent via node-cli).
+  equivalent via iowap-cli).
 - **Track:** enter a relay task id or watch tracked tasks live — per-stage
   status dots, result previews, artifacts.
 - **Delegated rows:** tasks submitted owner-directed
@@ -105,17 +105,17 @@ verifies md5; frontend hot-reloads, backend edits need one app restart.
 ### Session bridge (agent → track store)
 
 Tasks submitted from agent sessions via `tools/iowap-task`
-(~/.local/bin/iowap-task, wraps `node-cli task submit`) merge into the
+(~/.local/bin/iowap-task, wraps `iowap-cli task submit`) merge into the
 shared flock-protected track store
 `~/.hermes/plugin-data/iowap/task-track-iowap.json` — the tasks page shows
 them alongside UI submissions with the same status dots.
 
 ### Health probe and load values (0.3.1+)
 
-The backend probes relay health through `node-cli server health` — it
+The backend probes relay health through `iowap-cli server health` — it
 never talks raw HTTP to the relay and does not parse the relay URL from
 state files; the target pin (`relay_config.json`, mDNS fallback) stays
-node-cli's business. Per-node `load_source` distinguishes host load
+iowap-cli's business. Per-node `load_source` distinguishes host load
 (`loadavg`) from agent-scoped cgroup values — don't compare load numbers
 across nodes.
 
@@ -126,7 +126,7 @@ ls ~/.hermes/plugins/iowap/dashboard/plugin_api.py
 # -> file exists (backend half installed)
 hermes config get plugins.enabled
 # -> contains "iowap"
-node-cli status
+iowap-cli status
 # -> an approved node identity exists for the backend to reuse
 ```
 

@@ -7,7 +7,7 @@ HACS reads `custom_components/iowap/`.
 
 | Direction | What | How |
 |-----------|------|-----|
-| Cluster → HA | IOWAP tasks drive approved home capabilities | HAOS app **IOWAP Node**: node-daemon + `ha-exec` handler with a fixed capability matrix |
+| Cluster → HA | IOWAP tasks drive approved home capabilities | HAOS app **IOWAP Node**: iowap-daemon + `ha-exec` handler with a fixed capability matrix |
 | HA → Cluster | Automations submit tasks into the cluster | `iowap.submit_task` service → `hassio.app_stdin` → app outbox → relay |
 | HA visibility | Node health + per-capability metrics as HA entities | App-side telemetry push via the Supervisor proxy |
 

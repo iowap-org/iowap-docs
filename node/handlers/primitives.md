@@ -13,17 +13,17 @@ produced by `hp put`.
 
 ## Overview
 
-Handler scripts get generic primitives from `node-cli` instead of building
+Handler scripts get generic primitives from `iowap-cli` instead of building
 transport logic themselves. All primitives are subprocess calls: the CLI
 loads the relay token (`RELAY_TOKEN_FILE`), makes the HTTP calls, and picks
 the transport — **scripts never touch the token or HTTP themselves**.
 
 | Primitive | Command | What it does |
 |---|---|---|
-| **put** | `node-cli hp put <path> --cap <capability>` | Moves a local file into the task — prints a transfer envelope to stdout |
-| **get** | `node-cli hp get` | Reads an envelope (stdin or `--file`), resolves the file, prints its local path |
-| **complete** | `node-cli complete --result-file <f>` | Completes a claimed stage; IDs default to env vars |
-| **note** | `node-cli task note "<message>"` | Appends a task note; task ID defaults to the env var |
+| **put** | `iowap-cli hp put <path> --cap <capability>` | Moves a local file into the task — prints a transfer envelope to stdout |
+| **get** | `iowap-cli hp get` | Reads an envelope (stdin or `--file`), resolves the file, prints its local path |
+| **complete** | `iowap-cli complete --result-file <f>` | Completes a claimed stage; IDs default to env vars |
+| **note** | `iowap-cli task note "<message>"` | Appends a task note; task ID defaults to the env var |
 
 ## Transfer envelope format (`__iowap_ref__`, v1)
 
@@ -52,11 +52,11 @@ unknown `v`/`src` values error loudly instead of silently misresolving.
 ## Ladder — `hp put` picks the smallest rung
 
 ```bash
-envelope=$(node-cli hp put ./result.pdf --cap storage.store.native)
+envelope=$(iowap-cli hp put ./result.pdf --cap storage.store.native)
 # -> {"__iowap_ref__": {...}}   (exactly one compact JSON line on stdout)
 ```
 
-Decision logic (shared with `node-cli file send`): `inline` if allowed
+Decision logic (shared with `iowap-cli file send`): `inline` if allowed
 and ≤ `max_inline_bytes`, else `artifact` if allowed and ≤
 `max_artifact_bytes`, else `bridge` if the capability allows it, else the
 error `file too big: … (server ladder: inline<=…, artifact<=…)`.
@@ -73,7 +73,7 @@ node with `storage.upload_channel`/`storage.download_channel` — see
 ## Resolving — `hp get`
 
 ```bash
-node-cli hp get <<< "$envelope"
+iowap-cli hp get <<< "$envelope"
 # -> {"path":"~/.relay/tmp/<task_id>/report.pdf","size_bytes":1234,"src":"inline"}
 ```
 
@@ -99,9 +99,9 @@ The completion/note primitives take IDs from these when flags are omitted
 
 ```bash
 # inside a handler script (RELAY_* already set):
-node-cli complete --result-file ./result.json
+iowap-cli complete --result-file ./result.json
 # -> stage = RELAY_STAGE_ID, task = RELAY_TASK_ID
-node-cli task note "processed 3 files"
+iowap-cli task note "processed 3 files"
 # -> note appended to RELAY_TASK_ID
 ```
 
@@ -117,7 +117,7 @@ capabilities:
       complete_by_script: true
 ```
 
-With the flag the handler completes its own stage (`node-cli complete …`)
+With the flag the handler completes its own stage (`iowap-cli complete …`)
 and leaves stdout empty; the daemon's fallback complete meets the relay's
 *"already completed"* 404 and counts it as success. Without the flag the
 default contract applies unchanged. **Rationale:** avoids the claim-TTL

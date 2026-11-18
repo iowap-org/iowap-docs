@@ -150,7 +150,7 @@ routing](forward-routing.md).
 ### File transfer ladder
 
 A capability that accepts or serves files declares which modes it
-supports; `node-cli file send` (and the handler primitives) pick the
+supports; `iowap-cli file send` (and the handler primitives) pick the
 smallest rung that fits:
 
 | Mode | When | Bound |

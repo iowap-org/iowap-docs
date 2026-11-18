@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate reference/cli.md from the live node-cli argparse tree.
+"""Generate reference/cli.md from the live iowap-cli argparse tree.
 
 The parser is the contract: every command/subcommand/flag/help line lands
 in the table, so the page can't drift from the code. Re-run whenever
@@ -91,7 +91,7 @@ def emit(parser, title: str, purpose: str, level: int, out: list[str]) -> None:
 
 
 parts: list[str] = [
-    "## CLI Reference (node-cli)",
+    "## CLI Reference (iowap-cli)",
     "",
     "Every command, subcommand, flag and its help of the **node** CLI — "
     "generated **from the live argparse tree** (the parser is the contract): "
