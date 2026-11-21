@@ -15,13 +15,14 @@ to run a relay, connect a node, or build capabilities.
 | Automate my home | [node/integrations/home-assistant](node/integrations/home-assistant.md) |
 | Drive the fleet from an agent desktop | [node/integrations/hermes](node/integrations/hermes.md) |
 | Give any MCP-speaking agent a toolkit | [clients/mcp](clients/mcp.md) |
+| Turn a desktop into a node host (universal node + bridge) | [node/universal-setup](node/universal-setup.md) |
 | Script against the API | [reference/api](reference/api.md) |
 | Look up a term | [concepts/glossary](concepts/glossary.md) |
 
 ## Structure
 
 ```
-getting-started.md            # Scenario-based entry point (8 reader paths)
+getting-started.md            # Scenario-based entry point (9 reader paths)
 concepts/                     # WHY/WAS — one page per model term
 ├── overview.md               #   What the relay is, positioning
 ├── nodes.md                  #   Node model, heartbeat, statuses
@@ -45,6 +46,7 @@ server/                       # Relay operations
 ├── setup.md  admin.md  dashboard.md  docker.md  database.md
 node/                         # Node operations + framework
 ├── setup.md  operations.md  config.md  tokens.md  capabilities.md  cli.md
+├── universal-setup.md        #   Host setup: universal node container + bridge daemon
 ├── handlers/                 #   contract.md (envelope I/O), primitives.md (hp put/get)
 └── integrations/             #   home-assistant.md, hermes.md
 federation/                   # Cross-relay bridging — forward path ships, return leg open

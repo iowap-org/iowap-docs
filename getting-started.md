@@ -62,7 +62,14 @@ submission, live tracking.
 [Home Assistant node](node/integrations/home-assistant.md) — HAOS app +
 integration, capability matrix, `iowap.submit_task` from automations.
 
-## 8. I want to understand the system first
+## 8. I want my desktop to donate host apps to the fleet
+
+[Host setup (universal node + bridge)](node/universal-setup.md) — the
+universal node container bootstrapped by a native bridge daemon
+(Windows-first, Docker Desktop), one-time MCP bearer for agents, opt-in
+publishing of `host.*` capabilities.
+
+## 9. I want to understand the system first
 
 [What is the relay](concepts/overview.md) →
 [nodes](concepts/nodes.md) → [capabilities](concepts/capabilities.md) →
@@ -76,6 +83,7 @@ defines every term used in these docs.
 |-----------|------|
 | Run the relay | [server setup](server/setup.md) (source) · [docker](server/docker.md) (container) · [QNAP storage](storage/qnap.md) (NAS node) |
 | Run a node | [node setup](node/setup.md) |
+| Run a node in a container (desktop host) | [universal node + bridge](node/universal-setup.md) |
 | Write a capability | [capabilities how-to](node/capabilities.md) + [handler contract](node/handlers/contract.md) |
 | Orchestrate multi-step work | [flows](concepts/flow.md) → [flow runner](flow/runner.md) |
 | Automate via HA | [home assistant node](node/integrations/home-assistant.md) |

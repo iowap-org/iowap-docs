@@ -6,7 +6,7 @@
 > in sync when adding pages (CONTRIBUTING.md) — same table as README.
 
 ## Entry (read these first)
-- [getting-started](getting-started.md): 8 scenario paths into the docs
+- [getting-started](getting-started.md): 9 scenario paths into the docs
 - [concepts/overview](concepts/overview.md): what the relay is, positioning
 - [concepts/glossary](concepts/glossary.md): verbatim terminology — titles bind to it
 
@@ -53,6 +53,7 @@
 - [node/handlers/primitives](node/handlers/primitives.md): hp put/get, __iowap_ref__ envelopes, complete_by_script
 - [node/integrations/home-assistant](node/integrations/home-assistant.md): HAOS app + integration, capability matrix, submit_task
 - [node/integrations/hermes](node/integrations/hermes.md): desktop chip/pane/task pages, iowap-cli backend
+- [node/universal-setup](node/universal-setup.md): host setup — universal node container + bridge daemon (Windows-first), one-time MCP bearer, ports/env reference
 
 ## Storage (ops)
 - [storage/storage](storage/storage.md): capabilities, bridge server, channels, backups/retention, tar transfer

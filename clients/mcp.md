@@ -86,10 +86,12 @@ PyPI versions are immutable: every toolkit change ships as a version bump.
   unset means all published capabilities).
 - **`artifact_download` writes a file:** it refuses to overwrite an existing
   path unless `overwrite: true` is passed.
-- **Stdio only, by design:** the toolkit binds a **local** node to an AI agent
-  on the same host. There is deliberately no remote/HTTP transport — exposing
-  a node identity over the network is a leak path, not a feature. POSIX host
-  (Linux/macOS) — no Windows support.
+- **Local host by design:** the toolkit binds a **local** node to an AI
+  agent on the same host. stdio is the default transport; the optional
+  HTTP transport (`--http`, Bearer via `IOWAP_MCP_BEARER`, since 0.1.8)
+  serves the containerized universal-node setup — see
+  [host setup](../node/universal-setup.md). It stays loopback-bound:
+  exposing a node identity to the network is a leak path, not a feature.
 
 ## Troubleshooting
 
