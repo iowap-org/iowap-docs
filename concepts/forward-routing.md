@@ -53,6 +53,51 @@ and `forward` is never advertised in a node's capabilities.
 
 Worked cURL examples: [the API reference](../reference/api.md#forward-routing).
 
+## Slots as the service side of the nodes
+
+A neighbor node offering work to other nodes does not publish a catalog
+address or a URL — it publishes **slots**. The slot declaration is
+node-owned metadata in the node's own `node.yaml` (`forward_slots`, see
+[node config](../node/config.md#forward-slots) for the form and the
+dashboard's definition card); every heartbeat carries it to the relay,
+which validates and stores the rows (typed declarations, see
+[typed slots](#typed-slots)). The consumer-facing surface is then just
+the submit itself:
+
+- **The neighbor = the node.** There is no separate "service instance"
+  to register: whatever advertises the slots in its heartbeat IS the
+  service, addressable as `(node_id, slot)`. When the node goes away,
+  its declaration rows go with it — a dead service stops offering, it
+  never lingers.
+- **Declaring is free, routing is admin work.** Any node can define
+  slots in its own `node.yaml` (locally in the node dashboard's
+  definition card, or by editing the file). Turning a slot's *caller*
+  into the routed *target* is the mapping
+  `(submitter_node_id, slot) → target_capability` — and mappings are
+  managed by an admin only (see [mapping model](#mapping-model)); a node
+  cannot point its own slots anywhere, and there is no public slot
+  directory (the submitter scope is the only scope).
+- **Not every slot routes.** Value slots (`text` / `bool`) are declared
+  but deliberately **not routable**: submits against them are refused
+  with `422 forward_slot_not_routable` before any mapping is consulted
+  (the [submit gate](#submit-gate)). They carry configuration values and
+  payload defaults for the routable slots instead (refs, T-247 bindings,
+  see [typed slots](#typed-slots) and
+  [payload binding](#payload-binding)).
+- **The full chain, one hop.** Submit with `(submitter, slot)` →
+  declared-type gate → mapping resolve → the stage is rewritten to the
+  `target_capability` and becomes a normal pending claim: exactly the
+  nodes advertising the target's capability can take it, and the
+  execution runs ON THE TARGET NODE (the claimer flips `owner_node_id`,
+  `submitted_by` stays the caller). Addressing stays relay-mediated —
+  there are no self-declared node URLs in the slot chain, so the
+  target's address and provider are never the caller's problem.
+
+The two-node chain (declare → gate → map → claim on the target) is
+covered end-to-end by the relay suite's forward-routing tests
+(`tests/test_forward_routing.py`,
+`tests/test_t046_busy_slots_verification.py`).
+
 ## Typed slots
 
 Since migration 16 a declared slot carries a **type**. The declaration is
