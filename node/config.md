@@ -33,13 +33,21 @@ capabilities:
 |-----|---------|
 | `node_name` | Friendly name, forwarded in every heartbeat, shown in dashboard + `iowap-cli node list` |
 | `description` | Free-form prose (max 1024 chars), forwarded in every heartbeat |
-| `status` | Operator request: `busy` / `idle` / `online` — prefer `iowap-cli node busy`/`idle`/`clear-status` which write it safely |
-| `budget` | Points budget for claim admission: a claim needs the `max_parallel` headroom **and** the running points plus its capability's `cost` to stay within the budget (points released when the stage ends); unset = points axis off |
+| `status` | Operator request: `busy` / `idle` / `online` — prefer `iowap-cli node busy`/`idle`/`clear-status` or the dashboard **Busy** toggle, which write it safely |
+| `budget` | Points budget for claim admission (concurrent in-flight spend) and the accounting meter: a claim needs the `max_parallel` headroom **and** the running points plus its capability's `cost` to stay within the budget; completed capability tasks add their `cost` to the cumulative meter shown as `used/budget (P%)` on the dashboard (with a reset button). Integer form = admission-only legacy, `{total: N}` mapping form feeds both axes; unset = points axis off |
 | `capabilities` | Optional list — a node can run with no capabilities and gain them at runtime |
 
 The schema allows additional top-level keys (forward-compatible). Legacy
 files (`capabilities.active.yaml`, `capabilities.d/`) are auto-migrated to
 `node.yaml`/`profiles.d/` on first start of a current daemon.
+
+The capabilities section of `node.yaml` is maintained for you when you
+manage capabilities in the dashboard: every publish change (and every
+create/edit/delete) recomposes the capabilities section from the
+working profile filtered to the published (allowlist) entries and
+writes it atomically — non-capability blocks survive
+byte-for-byte. Full model: [capabilities
+how-to](capabilities.md#publishing-dashboard-defined-capabilities-manual-by-default).
 
 ### Capabilities
 

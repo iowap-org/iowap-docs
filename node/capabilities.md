@@ -50,6 +50,47 @@ Daemon heartbeats the new capabilities (or reloads on SIGHUP)
 A minimal profile without any capability is valid — node-level fields
 only ([config](config.md)).
 
+## Publishing dashboard-defined capabilities — manual by default
+
+Capabilities authored in the **node dashboard** (bridge/provider
+capabilities without a local handler) follow a **manual publish** model
+(T-045) instead of per-entry `auto_publish` flags:
+
+- A newly created capability starts **unpublished** — it joins the
+  profile but stays invisible to the relay until you publish it.
+- The dashboard renders each capability row with a **checkbox** showing
+  the current published state. Tick/untick freely, then press
+  **“Update Capabilities”** — one POST applies the whole checked set as
+  the new publish state (publishes the newly ticked, pulls back the
+  unticked, leaves the rest alone) and flashes
+  `published: N, unpublished: M, unchanged: K`.
+- `capability_publish` on the
+  [MCP service surface](tokens.md#agent-tokens-mcp-multi-bearer) and
+  `iowap-cli capabilities publish` per-CLI remain the programmatic
+  per-call paths.
+- The published set lives in `node.yaml`'s `bridge.allowlist`.
+  **Every mutation recomposes the active file automatically** (the
+  `recompile_active_profile()` pipeline): the capabilities section of
+  `node.yaml` is rebuilt from the allowlist-filtered entries, non-
+  capability blocks survive byte-for-byte, and the daemon gets a SIGHUP.
+  Validation failures write nothing.
+- **One-shot migration** for nodes upgraded from the blanket-publish
+  model: a node whose bridge block still has `auto_publish: true` with
+  an empty allowlist gets the allowlist seeded from its current
+  providers on the first bridge-block write — the live state is
+  conserved, then everything is manual.
+- **Pulling a capability back is enforced at the relay**: the
+  worker heartbeat carries the full published list as a *replace*
+  (capabilities that drop out of the heartbeat are deleted
+  server-side), so an unpublished capability disappears from the
+  relay's discovery automatically.
+
+The `auto_publish` key stays valid in YAML profiles for *local handler*
+capabilities (it includes the entry in every heartbeat without an
+allowlist entry); dashboard-authored bridge capabilities default to
+off regardless of the key.
+
+
 ### Node-level top-level keys
 
 The active profile also carries node-level configuration as top-level

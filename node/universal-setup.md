@@ -1,12 +1,24 @@
 # Host setup (universal node + bridge)
 
 Turn a desktop into a self-contained IOWAP host: the **universal node**
-runs as a Docker container — the same node image every other IOWAP node
-uses, no fork — and a small native **bridge daemon** on the host
+runs as a Docker container — the dedicated **universal-node flavour
+image** (built on top of the plain node framework image, see below) —
+and a small native **bridge daemon** on the host
 bootstraps that container, registers it against your relay, and exposes
 host-side applications (first target: a local ComfyUI) to the fleet as
 `host.*` capabilities. Windows-first, but it runs on any Docker host
 (Docker Desktop on Windows/macOS, Docker Engine on Linux).
+
+Current stack (2026-11 release set): container image
+`ghcr.io/iowap-org/iowap-universal-node:latest` — node framework
+**2.3.66** with the MCP multi-bearer surface (**14 tools**, agent
+tokens with per-task binding) — and bridge daemon **bridge-v0.3.7**
+(exec contract v1.1: the daemon is a *dumb executor*, it runs the spec
+the node sends instead of resolving capability names). The image builds
+on the plain `iowap-node-base` framework image — the flavour parts (the
+streaming-HTTP MCP surface and the bootstrap) live in the
+[`iowap-universal-node`](https://github.com/iowap-org/iowap-universal-node)
+repo and get baked by CI.
 
 The setup below needs no Docker CLI or GUI interaction: the daemon talks
 to the Docker Engine itself and executes the
@@ -25,17 +37,22 @@ Start it before the daemon: the daemon's bootstrap pings the engine
 
 ## 2. Download the bridge daemon
 
-Grab the single executable from the
-[releases page](https://github.com/iowap-org/iowap-bridge-daemon/releases)
-of the `iowap-bridge-daemon` repo — for Windows:
-`iowap-bridge-windows-amd64.exe` (release assets are published with each
-`v*` tag). Every asset has a sibling `.sha256`
+Grab the single executable from the releases of the
+[`iowap-universal-node`](https://github.com/iowap-org/iowap-universal-node/releases)
+repo — **GitHub Releases are the canonical channel** (public, hashable,
+one release per `bridge-v*` tag). For Windows download:
+`iowap-bridge-windows-amd64.exe`. Every asset has a sibling `.sha256`
 file — verify before running:
 
 ```powershell
 Get-FileHash .\iowap-bridge-windows-amd64.exe -Algorithm SHA256
 # -> compare against the value in iowap-bridge-windows-amd64.exe.sha256
 ```
+
+The running tray checks the same channel via the releases API and
+notifies when a newer `bridge-v*` version exists. (Nextcloud
+`Shared/iowap-bridge/` mirrors every release for convenience — it is the
+private test channel, not the canonical one.)
 
 The binary is unsigned: Windows SmartScreen shows a one-time warning on
 first launch — "More info" → "Run anyway".
@@ -116,34 +133,99 @@ curl -H "Authorization: Bearer <bearer>" http://127.0.0.1:7781/mcp
 
 What the agent gets: the curated IOWAP toolset over MCP — tool
 reference and security boundary in
-[MCP toolkit](../clients/mcp.md) (the HTTP transport variant).
+[MCP toolkit](../clients/mcp.md) (the HTTP transport variant,
+**14 tools** including the capability-management tools).
 
-## 6. Publish host capabilities (opt-in)
+## 5b. Agent tokens (per-agent MCP access)
+
+Since the multi-bearer update the bearer shown at bootstrap is the
+**primary** token (full access, never shown again). For every extra MCP
+client create an **agent token** in the node dashboard (section
+“Agent-Tokens” on the web UI):
+
+- **Create** → the raw token is displayed **exactly once**
+  (show-once); the node stores only its SHA-256 hash in the
+  `iowap-agent-tokens` volume — not on the Explorer-visible workspace.
+- Every agent task is **bound to its token**: `task_result`,
+  `artifact_download` and `artifact_link` only answer for tasks that
+  this agent submitted. A different agent asking for the same task
+  gets the same “not found” answer as asking for a task that does not
+  exist — ownership leaks nothing.
+- **Capability management is opt-in per token** (`caps:manage` toggle):
+  without the flag the capability create/update/publish tools answer
+  “restricted for this token”.
+- **Revoke** flips the token off immediately (401) and keeps the
+  binding history in the store.
+
+The primary bearer stays untouched and keeps full access.
+
+## 6. Publish host capabilities (manual, checkbox model)
 
 The node polls the daemon's manifest and detects provider capabilities
-(e.g. `comfy.generate`). Publishing is **conservative by default**:
-without an explicit opt-in, detected caps are logged but never published
-to the relay. To switch them on, add a `bridge:` block to the node's
-`node.yaml` (inside the container at `~/.relay/node.yaml`; the state
-volume keeps it across restarts):
+(e.g. `comfy.generate`). Publishing is **manual and per-capability**:
+a newly detected or dashboard-created capability starts unpublished and
+stays invisible to the relay until you publish it.
+
+On the dashboard's capability table every row carries a **checkbox**
+showing the current published state. Tick the capabilities that should
+go live, untick the ones that should be pulled back, then press
+**“Update Capabilities”** — one call applies the whole set and flashes
+`published: N, unpublished: M, unchanged: K`. Programmatically the same
+works via `capability_publish(published=true/false)` on the MCP
+service surface.
+
+Under the hood every publish change (and every capability
+create/edit/delete) automatically recomposes the active `node.yaml`
+from the allowlist-filtered entries — the daemon gets a reload, and
+the relay receives the new full capability list on the next heartbeat.
+Because the worker heartbeat is a **full replace**, pulling a
+capability back deletes it from the relay's discovery automatically.
+
+Underlying config (inside the container at `~/.relay/node.yaml`; the
+state volume keeps it across restarts):
 
 ```yaml
 bridge:
   url: http://host.docker.internal:7780
-  token: ""              # empty = use the injected IOWAP_BRIDGE_TOKEN env
-  workspace: /workspace  # the shared workspace volume root
-  auto_publish: false    # conservative default: detect + log only
-  allowlist: []          # explicit opt-in, e.g. ["comfy.generate"] or ["*"]
+  token: ""
+  workspace: /workspace
+  allowlist: ["comfy.generate", "host.sysinfo"]   # the publish state
   poll_interval: 60
 ```
 
-Gate semantics: an allowlist entry (or `["*"]`) publishes exactly the
-listed names; `auto_publish: true` publishes everything **only** while
-the allowlist is empty — a non-empty allowlist always wins. Config
-changes are picked up on the next manifest poll, no daemon restart
-needed. Published caps appear in the fleet as `host.<name>` and are
-claimed like any other capability. The [glossary](../concepts/glossary.md)
-defines the vocabulary.
+A legacy `bridge:` block with `auto_publish: true` and an empty
+allowlist is migrated once on the first bridge-block write after the
+update: the allowlist is seeded with the then-current capability names
+and `auto_publish` turns off — the live state is conserved, from then
+on everything is manual. `auto_publish` itself stays a valid opt-in
+flag for local-handler profiles.
+
+## 6b. Budget and busy (node dashboard)
+
+The dashboard's **Budget & Busy** section:
+
+- **Budget** — an accounting budget (set 10, 100 or whatever your
+  scale is). Every completed capability task adds its `cost` to a
+  persistent meter shown as `used N / budget B (P%)` next to a
+  reset button. The budget also feeds the claim-admission axis, so
+  the value is never silently disarmed. No automatic busy at 100% —
+  the switch below is yours to flip.
+- **Busy switch** — a manual override that persists in the config and
+  rides every heartbeat: while busy the node claims nothing and shows
+  `busy` in the fleet; switching it off reverts to `idle`.
+
+## 6c. Forward slots (define + routing)
+
+Forward slots let a service address one of this node's capabilities by
+a stable name instead of a concrete task. In the dashboard's forward
+section you **define** slots directly (label, typed
+`forward`/`text`/`bool`, value and ref fields for typed slots) — the
+definition lands in the `forward_slots` section of `node.yaml` and
+rides every heartbeat. The `(node, slot) → target_capability`
+mappings are maintained by an admin on the relay side; full semantics
+(including which slots are routable and how a mapped submit reaches a
+pinned target): [forward routing](../concepts/forward-routing.md)
+— slots as the service side of the nodes.
 
 ## Ports
 
@@ -191,11 +273,13 @@ docker ps --filter name=iowap-universal-node --format "{{.Names}} {{.Status}}"
 | Problem | Solution |
 |---------|----------|
 | Daemon exits with "install or start Docker Desktop" | The engine check failed — start Docker Desktop (or Docker Engine) and run the daemon again. |
-| Container crash-loops | Likely a stale cached node image missing the blank-start/bridge features. Remove the container (`docker rm -f iowap-universal-node`), pull the current `ghcr.io/iowap-org/iowap-node-base` image, and start the daemon again — bootstrap recreates the container from the fresh image. |
-| `host.*` capability does not appear | The publish gate is conservative by default — check the `bridge:` block in the node's `node.yaml`: a cap publishes only when it is in `allowlist` (or `["*"]`), or when `auto_publish: true` and the allowlist is empty. The node logs detected-but-gated caps. |
+| Container image is stale after a stack update | Remove the container (`docker rm -f iowap-universal-node`) and `docker compose pull && up -d` (or let the daemon recreate it) — the daemon pulls `ghcr.io/iowap-org/iowap-universal-node`, which carries the current node framework and MCP surface. |
+| `host.*` capability does not appear | Publishing is manual: tick the capability row and press **“Update Capabilities”** on the dashboard (or create a `bridge.allowlist` entry). A legacy block with `auto_publish: true` and an empty allowlist migrates itself on the first bridge-block write — otherwise the node logs detected-but-unpublished caps. |
+| Checkbox publish “didn't take” | The batch needs node ≥ 2.3.65 (the recompose pipeline lives in the wheel) — check `pip show iowap-node` inside the container after pulling the image. |
+| Agent A does not see agent B's task results | Per-task binding is by design — `task_result`/`artifact_download` of another agent answer `not_found`. Use the primary bearer for operator-wide read access. |
 | Node stays `pending` | Admin must approve it — dashboard **Nodes → Approve** ([server admin](../server/admin.md)). |
-| MCP bearer lost / never copied | One-time display — recreate the container to rotate (a daemon restart alone never re-shows it). |
-| `401` from the MCP endpoint | Wrong or missing bearer in the agent config — compare against the snippet from step 5. |
+| MCP bearer lost / never copied | One-time display for the primary bearer — recreate the container to rotate. Agent tokens (5b) can be created/revoked freely in the dashboard instead. |
+| `401` from the MCP endpoint | Wrong or missing bearer in the agent config — compare against the agent token from section 5b or the bootstrap snippet (primary bearer). |
 | Relay not found in the UI form | mDNS discovery found nothing — type the relay address manually, or check that the relay advertises mDNS. |
 
 ## Related pages

@@ -82,6 +82,26 @@ Both credentials expired? Re-register:
 - **Not transferable** — a runtime token is bound to its `node_id`; don't
   copy tokens between nodes.
 
+## Agent tokens (MCP multi-bearer)
+
+The single `IOWAP_MCP_BEARER` is the **primary** token — full access,
+shown once at bootstrap. Since the multi-bearer update (node ≥ 2.3.63)
+every additional MCP client gets its own **agent token** instead:
+
+- Created and revoked in the node dashboard (section **Agent-Tokens**);
+  the raw token is shown exactly once and only its SHA-256 hash is
+  stored (in the `iowap-agent-tokens` volume, not on the
+  Explorer-visible workspace).
+- Every submitted task is **bound to the token** that submitted it:
+  `task_result`, `artifact_download` and `artifact_link` answer only
+  for the submitting agent's own tasks — another agent gets the same
+  `not_found` answer as for a task that never existed.
+- Capability management (`capability_create/update/delete/publish`) is
+  gated by a per-token `caps:manage` toggle in the dashboard.
+
+Operation details and the dashboard flow:
+[universal setup, section 5b](universal-setup.md#5b-agent-tokens-per-agent-mcp-access).
+
 ## Related pages
 
 - [operations](operations.md) — the automatic maintenance intervals

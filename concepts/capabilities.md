@@ -45,7 +45,20 @@ every concrete capability with `.native`.
 
 A capability is defined in the node's profile (`~/.relay/node.yaml`,
 profiles under `~/.relay/profiles.d/`), published by the heartbeat, and
-matched by the scheduler. The minimal entry and the fields it can carry:
+matched by the scheduler. Two publish paths exist:
+
+- **Local handler capabilities** (a `handler:` runs on the node) carry
+  the per-entry `auto_publish` key as before — `true` includes the
+  entry in every heartbeat.
+- **Dashboard/bridge capabilities** (script and exec capabilities managed
+  in the node dashboard or over MCP) are **manual**: they start
+  unpublished, and the dashboard's checkboxes plus the
+  “Update Capabilities” button set the published set
+  ([how-to](../node/capabilities.md#publishing-dashboard-defined-capabilities-manual-by-default)).
+  Pulling one back removes it from the relay's discovery on the next
+  heartbeat (the worker heartbeat replaces the full list).
+
+The minimal entry and the fields it can carry:
 
 ```yaml
 capabilities:
