@@ -11,7 +11,7 @@ host-side applications (first target: a local ComfyUI) to the fleet as
 
 Current stack (2026-11 release set): container image
 `ghcr.io/iowap-org/iowap-universal-node:latest` — node framework
-**2.3.67** with the MCP multi-bearer surface (**14 tools**, agent
+**2.3.68** with the MCP multi-bearer surface (**14 tools**, agent
 tokens with per-task binding) — and bridge daemon **bridge-v0.3.9**
 (exec contract v1.1: the daemon is a *dumb executor*, it runs the spec
 the node sends instead of resolving capability names; since T-048 the
@@ -162,6 +162,13 @@ client create an **agent token** in the node dashboard (section
   binding history in the store.
 
 The primary bearer stays untouched and keeps full access.
+
+The agent-token store resolves `/data/agents` and **falls back to the
+relay-dir store automatically** when that named volume is not writable
+(typical for volumes created before the ownership fix) — token creation
+keeps working without a manual fix; container images also bake
+appuser ownership into the first-mount volume, so fresh installs create
+the volume writable from the start.
 
 ## 6. Publish host capabilities (manual, checkbox model)
 
