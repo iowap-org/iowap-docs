@@ -85,6 +85,14 @@ capabilities without a local handler) follow a **manual publish** model
   server-side), so an unpublished capability disappears from the
   relay's discovery automatically.
 
+The daemon manifest's `health` field is **advisory** (T-048): the
+manifest is a declaration, not a health gate. A `health: "down"` entry
+stays in the manifest and is never dropped or un-published because of
+its health — the allowlist above keeps deciding what goes live, and a
+command that cannot actually run reports its honest exec error at run
+time (the task fails with the daemon's cause text) instead of
+vanishing.
+
 The `auto_publish` key stays valid in YAML profiles for *local handler*
 capabilities (it includes the entry in every heartbeat without an
 allowlist entry); dashboard-authored bridge capabilities default to

@@ -11,10 +11,12 @@ host-side applications (first target: a local ComfyUI) to the fleet as
 
 Current stack (2026-11 release set): container image
 `ghcr.io/iowap-org/iowap-universal-node:latest` — node framework
-**2.3.66** with the MCP multi-bearer surface (**14 tools**, agent
-tokens with per-task binding) — and bridge daemon **bridge-v0.3.7**
+**2.3.67** with the MCP multi-bearer surface (**14 tools**, agent
+tokens with per-task binding) — and bridge daemon **bridge-v0.3.8**
 (exec contract v1.1: the daemon is a *dumb executor*, it runs the spec
-the node sends instead of resolving capability names). The image builds
+the node sends instead of resolving capability names; since T-048 the
+manifest is a declaration and `health` is advisory — entries are never
+gated away, failures report at run time). The image builds
 on the plain `iowap-node-base` framework image — the flavour parts (the
 streaming-HTTP MCP surface and the bootstrap) live in the
 [`iowap-universal-node`](https://github.com/iowap-org/iowap-universal-node)
@@ -165,6 +167,12 @@ The node polls the daemon's manifest and detects provider capabilities
 (e.g. `comfy.generate`). Publishing is **manual and per-capability**:
 a newly detected or dashboard-created capability starts unpublished and
 stays invisible to the relay until you publish it.
+
+Health is **advisory** (T-048): the daemon keeps probing and a
+`health: "down"` entry STAYS in the manifest — the node does not drop
+it and a down status never unpublishes anything. What publishes is the
+allowlist below; a command that cannot run reports its honest exec
+error at run time (SPEC §5), never a silent success.
 
 On the dashboard's capability table every row carries a **checkbox**
 showing the current published state. Tick the capabilities that should
