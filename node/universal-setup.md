@@ -12,14 +12,16 @@ host-side applications (first target: a local ComfyUI) to the fleet as
 Current stack (2026-11 release set): container image
 `ghcr.io/iowap-org/iowap-universal-node:latest` — node framework
 **2.3.67** with the MCP multi-bearer surface (**14 tools**, agent
-tokens with per-task binding) — and bridge daemon **bridge-v0.3.8**
+tokens with per-task binding) — and bridge daemon **bridge-v0.3.9**
 (exec contract v1.1: the daemon is a *dumb executor*, it runs the spec
 the node sends instead of resolving capability names; since T-048 the
 manifest is a declaration and `health` is advisory — entries are never
-gated away, failures report at run time). The image builds
-on the plain `iowap-node-base` framework image — the flavour parts (the
-streaming-HTTP MCP surface and the bootstrap) live in the
-[`iowap-universal-node`](https://github.com/iowap-org/iowap-universal-node)
+gated away, failures report at run time; since T-049 the tray ships the
+manual **Node upgrade** action, see
+[updating the node](#7-updating-the-node-manual-from-the-tray)). The
+image builds on the plain `iowap-node-base` framework image — the
+flavour parts (the streaming-HTTP MCP surface and the bootstrap) live
+in the [`iowap-universal-node`](https://github.com/iowap-org/iowap-universal-node)
 repo and get baked by CI.
 
 The setup below needs no Docker CLI or GUI interaction: the daemon talks
@@ -235,6 +237,49 @@ mappings are maintained by an admin on the relay side; full semantics
 pinned target): [forward routing](../concepts/forward-routing.md)
 — slots as the service side of the nodes.
 
+## 7. Updating the node (manual, from the tray)
+
+Since bridge-v0.3.9 the tray menu carries **“Node upgrade…”** (v1 is
+manual on purpose — there is no auto-upgrade scheduler). The item is
+**enabled only when the digest check found a difference** between the
+pulled `ghcr.io/iowap-org/iowap-universal-node:latest` and the
+registry's current digest: the check runs once at tray start, with
+every **“Check for updates”** click, and again after a finished
+upgrade — an unknown state never enables the action.
+
+**Flow:** click **Node upgrade…** → confirm dialog → two compose steps
+on the same vendored compose profile the daemon already executed at
+bootstrap (no second, drifting copy):
+
+1. `docker compose pull` — brings the image to the registry digest.
+2. `docker compose up -d` — compose recreates the service on the image
+   change.
+
+The sequence is atomic at the pull boundary: a failed pull never
+reaches the recreate — the running container stays untouched (a clean
+message box reports the failure, the details live in `daemon.log`). The
+per-step progress („pull OK → recreate OK → new digest“) shows as tray
+status lines and in the daemon log.
+
+**What survives the recreate:** the node's registration and `node.yaml`
+(including the bridge block, publish allowlist and slots) on the
+`universal-node-state` volume, the agent tokens on the
+`iowap-agent-tokens` volume, everything under the shared workspace bind,
+and the injected MCP bearer — the daemon re-resolves the tokens the
+container already runs with, so the recreate never rotates them.
+
+**What interrupts:** running MCP sessions go down with the old
+container (the confirm dialog says so) — agents reconnect with their
+bearer; in-flight exec tasks fail honestly at the relay side.
+
+**Rollback:** the old image stays in the local Docker cache — the
+rollback is a recreate with the old digest tag (retag it and
+`docker compose up -d` again by hand); there is no automatic undo.
+
+**The exe is a separate channel:** the daemon itself updates via the
+GitHub release channel (section 2) — the tray's exe check stays purely
+informational, there is no exe auto-download.
+
 ## Ports
 
 All three ports are loopback-only — reachable from this host, never from
@@ -281,7 +326,7 @@ docker ps --filter name=iowap-universal-node --format "{{.Names}} {{.Status}}"
 | Problem | Solution |
 |---------|----------|
 | Daemon exits with "install or start Docker Desktop" | The engine check failed — start Docker Desktop (or Docker Engine) and run the daemon again. |
-| Container image is stale after a stack update | Remove the container (`docker rm -f iowap-universal-node`) and `docker compose pull && up -d` (or let the daemon recreate it) — the daemon pulls `ghcr.io/iowap-org/iowap-universal-node`, which carries the current node framework and MCP surface. |
+| Container image is stale after a stack update | Tray **“Node upgrade…”** (enabled on the digest diff, asks to confirm — see [updating the node](#7-updating-the-node-manual-from-the-tray)) runs `docker compose pull` + recreate for you — or by hand: `docker compose -f universal-node/docker-compose.yml pull && up -d`; the daemon pulls `ghcr.io/iowap-org/iowap-universal-node`, which carries the current node framework and MCP surface. |
 | `host.*` capability does not appear | Publishing is manual: tick the capability row and press **“Update Capabilities”** on the dashboard (or create a `bridge.allowlist` entry). A legacy block with `auto_publish: true` and an empty allowlist migrates itself on the first bridge-block write — otherwise the node logs detected-but-unpublished caps. |
 | Checkbox publish “didn't take” | The batch needs node ≥ 2.3.65 (the recompose pipeline lives in the wheel) — check `pip show iowap-node` inside the container after pulling the image. |
 | Agent A does not see agent B's task results | Per-task binding is by design — `task_result`/`artifact_download` of another agent answer `not_found`. Use the primary bearer for operator-wide read access. |
