@@ -161,6 +161,20 @@ client create an **agent token** in the node dashboard (section
 - **Revoke** flips the token off immediately (401) and keeps the
   binding history in the store.
 
+**Chained artifact flows (node ≥ 2.3.69):** an agent-owned artifact can
+feed the agent's next task. When an agent task completes, the artifacts
+its result pushed are recorded for that agent in the token store; the
+agent's next task may pass a T-179 artifact envelope
+(`{"__iowap_ref__": {"src": "artifact", "artifact_id": ...}}`) in the
+stage payload, and the node hydrates it automatically: the referenced
+artifact downloads (node credentials) into
+`<workspace>/inputs/<artifact_id>/<name>` and the payload field rewrites
+to `{"src": "path", "path": "inputs/..."}` — the capability receives
+only the workspace path, never an artifact id. Ownership: the same agent
+needs no prior `task_result` fetch (the completion record is enough); a
+different agent referencing the artifact fails with "artifact '<id>'
+not available for this submitter"; the primary bearer keeps full access.
+
 The primary bearer stays untouched and keeps full access.
 
 The agent-token store resolves `/data/agents` and **falls back to the

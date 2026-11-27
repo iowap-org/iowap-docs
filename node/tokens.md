@@ -98,6 +98,20 @@ every additional MCP client gets its own **agent token** instead:
   `not_found` answer as for a task that never existed.
 - Capability management (`capability_create/update/delete/publish`) is
   gated by a per-token `caps:manage` toggle in the dashboard.
+- **Chained artifact flows (node ≥ 2.3.69)**: the artifacts an agent's
+  task pushes are bound to that agent at completion — referencing them
+  in the agent's NEXT task requires no `task_result`
+  fetch first. The follow-up payload carries a T-179 artifact envelope
+  (`{"__iowap_ref__": {"src": "artifact", "artifact_id": ...}}`); before
+  the exec the node downloads the referenced artifact with its own
+  credentials into `<workspace>/inputs/<artifact_id>/<name>` and rewrites
+  the payload field to `{"src": "path", "path": "inputs/..."}` — the
+  capability sees a workspace path, never an artifact id. Ownership
+  rules: the task's own agent may reference anything it has seen
+  (completion record or an earlier `task_result`); a DIFFERENT agent
+  referencing someone else's artifact fails the stage with "artifact
+  '<id>' not available for this submitter" — ownership leaks nothing;
+  the primary bearer keeps full access.
 
 Operation details and the dashboard flow:
 [universal setup, section 5b](universal-setup.md#5b-agent-tokens-per-agent-mcp-access).
