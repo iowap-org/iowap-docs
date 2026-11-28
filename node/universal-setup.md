@@ -11,7 +11,7 @@ host-side applications (first target: a local ComfyUI) to the fleet as
 
 Current stack (2026-11 release set): container image
 `ghcr.io/iowap-org/iowap-universal-node:latest` — node framework
-**2.3.68** with the MCP multi-bearer surface (**14 tools**, agent
+**2.3.70** with the MCP multi-bearer surface (**14 tools**, agent
 tokens with per-task binding) — and bridge daemon **bridge-v0.3.9**
 (exec contract v1.1: the daemon is a *dumb executor*, it runs the spec
 the node sends instead of resolving capability names; since T-048 the
@@ -211,6 +211,22 @@ from the allowlist-filtered entries — the daemon gets a reload, and
 the relay receives the new full capability list on the next heartbeat.
 Because the worker heartbeat is a **full replace**, pulling a
 capability back deletes it from the relay's discovery automatically.
+
+**Legacy baked entries normalize themselves (node ≥ 2.3.70).** If your
+`node.yaml` was recomposed by an older node release and still carries a
+provider entry under its published `host.*` name without the
+`bridge`/`bridge_name` router fields, the node recognizes that legacy
+form on load (`legacy baked bridge entries normalized (N)` in the log)
+and the next publish change rewrites it into the current
+routing-complete form — no manual edit of the config needed. A stale
+entry of that shape used to make every manifest poll skip its own
+capability (`bridge cap <name> skipped — collision with existing
+capability 'host.…'`): the node advertised it but no claim ever
+dispatched, so owner-pinned tasks stayed pending forever. The poll now
+refreshes a same-cap entry in place (`bridge cap <name> refreshed from
+manifest`) and claims flow again; a genuine local capability
+(`claimable: true` with a `handler`) still wins the namespace rule and
+is never regenerated.
 
 Underlying config (inside the container at `~/.relay/node.yaml`; the
 state volume keeps it across restarts):
